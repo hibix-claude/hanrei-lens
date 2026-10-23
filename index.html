@@ -734,7 +734,7 @@ const CATS = [
 const ED_BIT = 64;
 const AREAS = [{ bit: 1, label: "民事" }, { bit: 2, label: "刑事" }, { bit: 4, label: "行政" }, { bit: 8, label: "労働" }, { bit: 16, label: "知的財産" }, { bit: 32, label: "家事" }, { bit: 64, label: "憲法" }, { bit: 128, label: "少年" }];
 const AREA_BIT = Object.fromEntries(AREAS.map(a => [a.label, a.bit]));
-const FILES = ["data/cases-a.txt", "data/cases-b.txt", "data/cases-c.txt"]; // gzip を base64 で格納
+const FILES = ["cases-a.txt", "cases-b.txt", "cases-c.txt"]; // gzip を base64 で格納
 const PAGE = 50;
 
 // ---------- 和暦 ----------

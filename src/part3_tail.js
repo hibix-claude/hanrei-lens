@@ -445,7 +445,7 @@ function applyHash(h){
 function isNarrow(){ return window.matchMedia("(max-width: 860px)").matches; }
 function select(id, open){
   const sid = String(id); const r = byId.get(sid); if (!r) return;
-  state.selected = sid;
+  state.selected = sid; if (open) state.autoSel = false;
   document.querySelectorAll(".row").forEach(x => x.classList.toggle("sel", x.dataset.id === sid));
   renderDetail(r);
   document.title = `${titleOf(r)} | 判例レンズ`;

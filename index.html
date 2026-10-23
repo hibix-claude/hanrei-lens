@@ -1729,7 +1729,7 @@ const CASES = [
 const $ = (s, r) => (r || document).querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const fmtN = n => Number(n).toLocaleString("ja-JP");
-const DATA_VERSION = "2026-10-24-202610231944";
+const DATA_VERSION = "2026-10-24-202610232002";
 const IN_CLAUDE = !!(window.claude && typeof window.claude.use === "function");
 
 // ---------- 表記の正規化（検索語と収録テキストの両方に同じ規則を適用） ----------
@@ -1851,7 +1851,7 @@ function areaMask(r){
 // ---------- データ ----------
 const ALL = []; const byId = new Map(); const byNum = new Map(); const byONum = new Map(); const byDate = new Map();
 const EDIT = new Map(); CASES.forEach(c => { if (c.lid) EDIT.set(c.lid, c); });
-const SEGW = [6, 8, 1, 3, 2, 3, 1, 1, 9, 4]; // name, num, court, gist, cgist, law, rep, ex, ed name, ed text
+const SEGW = [6, 8, 1, 3, 2, 3, 1, 1, 20, 4]; // name, num, court, gist, cgist, law, rep, ex, ed name, ed text
 function index(r){
   const segs = [r.name, r.num, r.court, r.gist, r.cgist, r.law, r.rep, r.ex, r.ed ? r.ed.name : "", r.ed ? r.ed.tags.join(" ") + " " + r.ed.summary + " " + r.ed.laws.join(" ") : ""];
   const b = []; let s = "";
@@ -1937,7 +1937,7 @@ async function loadAll(){
     load.done = ALL.length; load.files++; setLoad();
     runSearch(true);
     if (pendingId && byId.has(pendingId)) { select(pendingId, true); pendingId = null; }
-    else if (!state.selected && !pendingId && state.results.length && !isNarrow()) select(state.results[0].id, false);
+    else if ((!state.selected || state.autoSel) && !pendingId && state.results.length && !isNarrow() && String(state.results[0].id) !== state.selected) { select(state.results[0].id, false); state.autoSel = true; }
     if (state.view === "saved") renderSaved();
   }
   // 編集収録（裁判所サイト未掲載）の判例を追加
@@ -1950,7 +1950,7 @@ async function loadAll(){
   runSearch(true);
   if (pendingId && byId.has(pendingId)) select(pendingId, true);
   pendingId = null;
-  if (!state.selected && state.results.length && !isNarrow()) select(state.results[0].id, false);
+  if ((!state.selected || state.autoSel) && state.results.length && !isNarrow() && String(state.results[0].id) !== state.selected) { select(state.results[0].id, false); state.autoSel = true; }
   else if (state.selected) { const r = byId.get(state.selected); if (r) renderDetail(r); }
   if (state.view === "saved") renderSaved();
 }
@@ -1980,7 +1980,7 @@ function recordQuery(q){ q = (q || "").trim(); if (!q) return; pushUnique(hist.q
 function recordViewed(id){ pushUnique(hist.viewed, { id: String(id), at: Date.now() }, x => x.id, 50); saveHist(); }
 
 // ---------- 状態 ----------
-const state = { q: "", groups: [], neg: [], cats: new Set(), areas: new Set(), court: "", courtName: "", kind: "", result: "", from: "", to: "", date: "", sort: "rel", view: "search", selected: null, results: [], shown: PAGE, loose: new Set(), hiddenDups: 0 };
+const state = { q: "", groups: [], neg: [], cats: new Set(), areas: new Set(), court: "", courtName: "", kind: "", result: "", from: "", to: "", date: "", sort: "rel", view: "search", selected: null, autoSel: false, results: [], shown: PAGE, loose: new Set(), hiddenDups: 0 };
 const KEY = "hanrei-lens:saved";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
 function persist(){ try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
@@ -2700,7 +2700,7 @@ function applyHash(h){
 function isNarrow(){ return window.matchMedia("(max-width: 860px)").matches; }
 function select(id, open){
   const sid = String(id); const r = byId.get(sid); if (!r) return;
-  state.selected = sid;
+  state.selected = sid; if (open) state.autoSel = false;
   document.querySelectorAll(".row").forEach(x => x.classList.toggle("sel", x.dataset.id === sid));
   renderDetail(r);
   document.title = `${titleOf(r)} | 判例レンズ`;

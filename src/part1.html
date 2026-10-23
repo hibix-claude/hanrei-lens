@@ -1,0 +1,494 @@
+<title>判例レンズ</title>
+<meta name="theme-color" content="#1F3A5F">
+<meta property="og:type" content="website">
+<meta property="og:title" content="判例レンズ">
+<meta property="og:description" content="裁判所ウェブサイト掲載の裁判例65,468件を、ブラウザだけで横断検索できる判例検索アプリ">
+<meta property="og:url" content="__SITE_URL__">
+<meta property="og:image" content="__SITE_URL__og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F5F7FA; --panel:#FFFFFF; --panel-2:#EEF2F7; --sel:#E8EFF8;
+  --ink:#1B2430; --muted:#5C6773; --faint:#8A94A1; --line:#D8DEE6; --line-2:#C3CBD6;
+  --navy:#1F3A5F; --navy-ink:#1F3A5F; --navy-soft:#DCE6F3;
+  --accent:#B8432F; --accent-soft:#F7E3DE;
+  --mark:#FFE59A; --ok:#2E7D5B; --warn:#9A6B00;
+  --shadow:0 10px 30px rgba(20,30,50,.10);
+  --radius:10px;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#12161C; --panel:#1A2029; --panel-2:#222A35; --sel:#243142;
+    --ink:#E7EAEE; --muted:#A3ACB8; --faint:#7B8592; --line:#2C3540; --line-2:#3A4552;
+    --navy:#2C4E7E; --navy-ink:#9DBDE6; --navy-soft:#22334C;
+    --accent:#E2735F; --accent-soft:#3C2620;
+    --mark:#5C4A12; --ok:#6FCF9B; --warn:#E0B454;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#12161C; --panel:#1A2029; --panel-2:#222A35; --sel:#243142;
+  --ink:#E7EAEE; --muted:#A3ACB8; --faint:#7B8592; --line:#2C3540; --line-2:#3A4552;
+  --navy:#2C4E7E; --navy-ink:#9DBDE6; --navy-soft:#22334C;
+  --accent:#E2735F; --accent-soft:#3C2620;
+  --mark:#5C4A12; --ok:#6FCF9B; --warn:#E0B454;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:var(--fs,14px);line-height:1.7;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--navy-ink)}
+mark{background:var(--mark);color:inherit;padding:0 .1em;border-radius:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+.app{max-width:1280px;margin:0 auto;padding-block:0 32px;padding-inline:16px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:16px 8px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{width:42px;height:42px;border-radius:8px;background:var(--navy);color:#fff;font-family:var(--serif);font-weight:700;font-size:24px;display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.04em;line-height:1.2}
+.brand-sub{font-size:12px;color:var(--muted);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.tabs{display:flex;gap:4px;background:var(--panel-2);padding:4px;border-radius:999px}
+.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:999px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
+.tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs .count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums}
+.tabs .count[data-zero="1"]{display:none}
+
+/* load bar */
+.loadbar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);padding:2px 4px 6px;font-variant-numeric:tabular-nums}
+.loadbar-in{flex:1;max-width:320px;height:5px;background:var(--panel-2);border-radius:3px;overflow:hidden}
+.loadbar-in i{display:block;height:100%;width:0;background:var(--navy);border-radius:3px;transition:width .2s}
+.loadbar.done{color:var(--ok)}
+.loadbar.done .loadbar-in i{background:var(--ok)}
+.loadbar.err{color:var(--accent)}
+
+/* search */
+.searchbar{padding-block:8px 4px}
+.searchbar form{display:flex;gap:8px;background:var(--panel);border:1.5px solid var(--line-2);border-radius:12px;padding:6px 6px 6px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.searchbar form:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px var(--navy-soft)}
+.searchbar input{flex:1;min-width:0;border:0;background:transparent;font-size:16px;padding:8px 0;outline:none}
+.searchbar input::placeholder{color:var(--faint)}
+.searchbar input::-webkit-search-cancel-button{display:none}
+.searchbar .go{border:0;background:var(--navy);color:#fff;padding:8px 18px;border-radius:8px;font-weight:700;letter-spacing:.06em}
+.searchbar .clear{border:0;background:transparent;color:var(--muted);padding:0 8px;font-size:18px;line-height:1}
+.hint{font-size:12px;color:var(--muted);padding:6px 4px 0}
+.hint code{background:var(--panel-2);padding:0 6px;border-radius:4px;font-family:inherit}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding-block:10px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:3px 12px;font-size:13px;color:var(--muted)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip.ed{border-style:dashed}
+.chip.ed.on{background:var(--accent);border-color:var(--accent);border-style:solid}
+.fsel{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.fsel select,.fsel input{border:1px solid var(--line-2);background:var(--panel);border-radius:8px;padding:4px 8px;font-size:13px;color:var(--ink)}
+.fsel input[type=number]{width:76px;font-variant-numeric:tabular-nums}
+.fsel .sep{color:var(--faint)}
+.reset{border:0;background:transparent;color:var(--navy-ink);font-size:13px;text-decoration:underline;text-underline-offset:3px;padding:2px 4px}
+.linkbtn{border:0;background:transparent;color:var(--navy-ink);font-size:12px;text-decoration:underline;text-underline-offset:3px;padding:0}
+.chip.area{border-color:var(--line);color:var(--muted);background:var(--panel-2)}
+.chip.area.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.io{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 0 12px}
+.io label.btn{cursor:pointer}
+.io-state{font-size:12px;color:var(--muted)}
+.io textarea{flex-basis:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.lineage{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.lineage li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.lineage li.cur{border-color:var(--navy);background:var(--sel)}
+.lineage li.link{cursor:pointer}
+.lineage li.link:hover{border-color:var(--navy)}
+.lineage .lv{font-size:11px;letter-spacing:.08em;color:var(--faint);white-space:nowrap;padding-top:2px}
+.lineage .t{font-family:var(--serif);font-weight:700}
+.lineage .m{grid-column:2;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.lineage .none{color:var(--faint)}
+
+/* main grid */
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.results-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:0 4px 8px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.results-head strong{color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.results-head .src{font-size:12px;color:var(--faint)}
+#resultList,#savedList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.row{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;transition:border-color .12s,background .12s}
+.row:hover{border-color:var(--line-2)}
+.row.sel{background:var(--sel);border-color:var(--navy)}
+.row .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;align-items:center}
+.row .meta .cat{color:var(--navy-ink);font-weight:500}
+.badge{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 6px;font-size:11px;font-weight:700;line-height:1.6}
+.row .ttl{font-family:var(--serif);font-weight:700;font-size:16px;line-height:1.45;text-wrap:balance}
+.row .ttl .alias{font-family:var(--sans);font-weight:400;font-size:13px;color:var(--muted);margin-left:6px}
+.row .star{align-self:start;border:0;background:transparent;color:var(--faint);font-size:18px;line-height:1;padding:0 2px}
+.row .star.on{color:var(--accent)}
+.row .snip{grid-column:1/-1;font-size:13px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row .snip.summ{color:var(--ink)}
+.empty{background:var(--panel);border:1px dashed var(--line-2);border-radius:var(--radius);padding:28px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:6px}
+.more{display:flex;justify-content:center;padding:14px 0 4px}
+
+/* detail */
+.detail{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);scrollbar-gutter:stable}
+.detail-in{padding:22px 24px 28px}
+.d-close{display:none}
+.d-kicker{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;align-items:center}
+.d-kicker .cat{display:inline-block;background:var(--navy-soft);color:var(--navy-ink);padding:1px 10px;border-radius:999px;font-weight:500}
+.d-title{font-family:var(--serif);font-weight:700;font-size:24px;line-height:1.35;margin:8px 0 2px;text-wrap:balance}
+.d-alias{font-size:14px;color:var(--muted);margin:0 0 6px}
+.d-cite{font-size:13px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:10px 0 14px;font-variant-numeric:tabular-nums}
+.d-cite dt{color:var(--faint);white-space:nowrap}
+.d-cite dd{margin:0}
+.d-actions{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 18px}
+.btn{border:1px solid var(--line-2);background:var(--panel);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.accent{border-color:var(--accent);color:var(--accent)}
+.btn.accent.on{background:var(--accent);color:#fff}
+.btn:disabled{opacity:.55;cursor:default}
+.d-sec{margin:0 0 18px}
+.d-sec h3{font-size:12px;letter-spacing:.14em;color:var(--faint);font-weight:700;margin:0 0 6px}
+.d-sec p{margin:0;max-width:66ch;white-space:pre-line}
+.d-sec .ex{font-size:13px;background:var(--panel-2);border-radius:8px;padding:10px 12px;color:var(--ink);line-height:1.7}
+.d-sec .laws{display:flex;flex-wrap:wrap;gap:6px}
+.d-sec .laws span{background:var(--panel-2);border-radius:6px;padding:2px 8px;font-size:12.5px}
+.d-sec .tags{display:flex;flex-wrap:wrap;gap:6px}
+.d-sec .tags button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:1px 10px;font-size:12.5px;color:var(--muted)}
+.d-sec .tags button:hover{border-color:var(--navy);color:var(--navy-ink)}
+.d-sec.ed{border-left:3px solid var(--accent);padding-left:12px}
+.memo{width:100%;min-height:84px;border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--paper);resize:vertical;line-height:1.6}
+.memo-state{font-size:12px;color:var(--faint);margin-top:4px;min-height:1.2em}
+
+/* AI box */
+.ai{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:14px 16px;margin:0 0 18px}
+.ai-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.ai-head h3{margin:0;font-size:13px;letter-spacing:.06em;color:var(--ink);display:flex;align-items:center;gap:8px}
+.ai-head h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.ai-out{white-space:pre-wrap;line-height:1.75;max-width:66ch;min-height:1.5em;margin:0}
+.ai-out.thinking{color:var(--muted);font-style:italic}
+.ai-note{font-size:12px;color:var(--warn);margin-top:6px}
+.ai-note:empty{display:none}
+.ai-q{display:flex;gap:8px;margin-top:12px}
+.ai-q input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;background:var(--panel)}
+.ai-chat{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.bub{padding:8px 12px;border-radius:10px;max-width:66ch;white-space:pre-wrap;line-height:1.7}
+.bub.u{background:var(--navy-soft);align-self:flex-end;border-bottom-right-radius:3px}
+.bub.a{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:3px}
+.bub.thinking{color:var(--muted);font-style:italic}
+.ai-off{font-size:12.5px;color:var(--muted)}
+
+/* similar */
+.sim{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sim li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.sim li:hover{border-color:var(--navy)}
+.sim .t{font-family:var(--serif);font-weight:700}
+.sim .m{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sim .pct{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.sim .bar{grid-column:1/-1;height:3px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+.sim .bar i{display:block;height:100%;background:var(--navy);border-radius:2px}
+.sim-state{font-size:12px;color:var(--faint)}
+.src-note{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:6px;line-height:1.6}
+
+/* about */
+.about{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 28px;max-width:860px}
+.about h2{font-family:var(--serif);font-size:22px;margin:0 0 6px}
+.about h3{font-size:15px;margin:22px 0 6px}
+.about p{margin:0 0 10px;max-width:70ch}
+.about .phase{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 0}
+.about .phase b{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--navy-ink)}
+.about .phase span{max-width:70ch}
+.about table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+.about th,.about td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
+.about th{color:var(--faint);font-weight:500;font-size:12px}
+.about td.num{text-align:right;white-space:nowrap}
+.about .yes{color:var(--ok);font-weight:700}
+.about .no{color:var(--accent);font-weight:700}
+.about .cond{color:var(--warn);font-weight:700}
+.tscroll{overflow-x:auto}
+.foot{font-size:12px;color:var(--faint);padding-top:20px;text-align:center}
+
+/* saved view */
+.saved-list .row{grid-template-columns:minmax(0,1fr)}
+.saved-list .memo-prev{grid-column:1/-1;font-size:13px;color:var(--ink);background:var(--paper);border-radius:6px;padding:6px 10px;border-left:3px solid var(--accent);white-space:pre-wrap}
+
+/* header tools */
+.tools{display:flex;gap:6px;align-items:center}
+.iconbtn{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;width:34px;height:34px;display:grid;place-items:center;color:var(--muted);font-size:15px;line-height:1}
+.iconbtn:hover{color:var(--ink);border-color:var(--navy)}
+.pop{position:absolute;right:16px;top:64px;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px;width:min(360px,calc(100vw - 32px))}
+.pop h4{margin:0 0 6px;font-size:12px;letter-spacing:.12em;color:var(--faint)}
+.pop .row-opt{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pop .row-opt button{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:3px 12px;font-size:13px;color:var(--muted)}
+.pop .row-opt button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.pop label.sw{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:10px}
+.kbd{display:inline-block;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:4px;padding:0 6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--panel-2)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+/* facets */
+.facets{display:flex;flex-direction:column;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px}
+.facets .fg{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.facets .fl{font-size:11px;letter-spacing:.1em;color:var(--faint);min-width:3.2em}
+.facet{border:1px solid var(--line);background:transparent;border-radius:999px;padding:1px 9px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.facet b{font-weight:500;color:var(--ink);margin-left:4px}
+.facet.on{background:var(--navy-soft);border-color:var(--navy);color:var(--navy-ink)}
+.datechip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;font-size:12px}
+.datechip button{border:0;background:transparent;color:inherit;font-size:14px;line-height:1;padding:0}
+.rh-actions{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+/* citations */
+a.cite{color:var(--navy-ink);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+a.cite:hover{text-decoration-style:solid}
+.d-sec .laws button{border:1px solid var(--line);background:var(--panel-2);border-radius:6px;padding:2px 8px;font-size:12.5px;color:var(--ink);cursor:pointer}
+.d-sec .laws button:hover{border-color:var(--navy);color:var(--navy-ink)}
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:80;background:rgba(10,16,24,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.overlay .box{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);max-width:1100px;width:100%;max-height:90vh;overflow:auto;padding:20px 22px}
+.overlay .box h3{margin:0 0 10px;font-family:var(--serif);font-size:18px}
+.overlay .close{float:right;border:0;background:transparent;font-size:20px;color:var(--muted);line-height:1}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cmp .col{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.cmp .col h4{font-family:var(--serif);font-size:16px;margin:0 0 4px}
+.cmp .col .m{font-size:12px;color:var(--muted);margin-bottom:8px}
+.cmp .col h5{font-size:11px;letter-spacing:.12em;color:var(--faint);margin:10px 0 4px}
+.cmp .col p{margin:0;font-size:13px;white-space:pre-line}
+.cmpbar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;background:var(--navy);color:#fff;border-radius:999px;padding:8px 14px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow);font-size:13px}
+.cmpbar button{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:999px;padding:2px 10px;font-size:12px}
+/* saved view blocks */
+.blk{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px}
+.blk h3{font-size:12px;letter-spacing:.12em;color:var(--faint);margin:0 0 6px}
+.blk .chipsrow{display:flex;flex-wrap:wrap;gap:6px}
+.blk .chipsrow button{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:2px 10px;font-size:12.5px;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blk ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.blk li{display:flex;gap:8px;align-items:center;font-size:13px}
+.blk li .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blk li button{border:1px solid var(--line-2);background:var(--panel);border-radius:6px;padding:1px 8px;font-size:12px;color:var(--muted)}
+.blk .none{font-size:12.5px;color:var(--faint)}
+.dupnote{font-size:12px;color:var(--muted)}
+.alt{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.alt li{font-size:13px}
+.foot a{color:var(--faint)}
+@media print{
+  .top,.loadbar,.searchbar,.filters,.results,.foot,.ai,.d-actions,.d-close,#savedView,#aboutView,.memo,.memo-state,.sim-state,.pop,.overlay,.cmpbar{display:none!important}
+  .app{max-width:none;padding:0}
+  .main{display:block}
+  .detail{position:static;max-height:none;overflow:visible;box-shadow:none;border:0}
+  .detail-in{padding:0}
+  body{background:#fff;color:#000}
+  a.cite{color:#000;text-decoration:none}
+}
+@media (max-width: 860px){
+  .cmp{grid-template-columns:1fr}
+  .pop{top:56px}
+  .main{grid-template-columns:1fr}
+  .detail{position:fixed;inset:0;top:env(safe-area-inset-top,0px);max-height:none;border-radius:0;border:0;box-shadow:none;z-index:50;transform:translateY(100%);transition:transform .22s ease;visibility:hidden}
+  .detail.open{transform:translateY(0);visibility:visible}
+  .d-close{display:inline-flex;position:sticky;top:0;z-index:2;width:100%;justify-content:space-between;align-items:center;background:var(--panel);border:0;border-bottom:1px solid var(--line);padding:10px 16px;font-weight:500;color:var(--navy-ink)}
+  .detail-in{padding:16px 16px 40px}
+  .d-title{font-size:21px}
+}
+@media (max-width: 520px){
+  .top{padding-block:12px 6px}
+  .brand-name{font-size:19px}
+  .tabs button{padding:6px 10px;font-size:13px}
+  .searchbar .go{padding:8px 12px}
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">判</div>
+      <div>
+        <div class="brand-name">判例レンズ</div>
+        <div class="brand-sub" id="brandSub">裁判所ウェブサイト掲載の裁判例を横断検索</div>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="表示切替">
+      <button type="button" id="tabSearch" class="on" data-view="search">検索</button>
+      <button type="button" id="tabSaved" data-view="saved">保存した判例 <span class="count" id="savedCount" data-zero="1">0</span></button>
+      <button type="button" id="tabAbout" data-view="about">データについて</button>
+    </nav>
+    <div class="tools">
+      <button type="button" class="iconbtn" id="helpBtn" title="キーボード操作（?）" aria-label="キーボード操作の一覧">?</button>
+      <button type="button" class="iconbtn" id="settingsBtn" title="表示設定" aria-label="表示設定">⚙</button>
+    </div>
+  </header>
+  <div class="pop" id="settingsPop" hidden>
+    <h4>テーマ</h4>
+    <div class="row-opt" id="optTheme"><button type="button" data-v="auto">端末に合わせる</button><button type="button" data-v="light">ライト</button><button type="button" data-v="dark">ダーク</button></div>
+    <h4>文字サイズ</h4>
+    <div class="row-opt" id="optFont"><button type="button" data-v="s">小</button><button type="button" data-v="m">標準</button><button type="button" data-v="l">大</button></div>
+    <label class="sw"><input type="checkbox" id="optDedupe"> 同一判決の別収録を1件にまとめる</label>
+    <label class="sw"><input type="checkbox" id="optFacets"> 検索結果の内訳を表示する</label>
+  </div>
+  <div class="pop" id="helpPop" hidden>
+    <h4>キーボード操作</h4>
+    <div class="keys">
+      <span><span class="kbd">/</span></span><span>検索欄に移動</span>
+      <span><span class="kbd">j</span> <span class="kbd">k</span></span><span>結果を下へ・上へ</span>
+      <span><span class="kbd">Enter</span></span><span>選択中の判例を開く（スマホ幅）</span>
+      <span><span class="kbd">s</span></span><span>選択中の判例を保存／解除</span>
+      <span><span class="kbd">c</span></span><span>選択中の判例を比較に追加</span>
+      <span><span class="kbd">Esc</span></span><span>詳細・パネルを閉じる</span>
+      <span><span class="kbd">?</span></span><span>この一覧を表示</span>
+    </div>
+  </div>
+  <div class="loadbar" id="loadbar" aria-live="polite"><div class="loadbar-in"><i id="loadfill"></i></div><span id="loadtext">裁判例データを読み込んでいます…</span></div>
+
+  <div id="searchView">
+    <section class="searchbar">
+      <form id="searchForm" role="search">
+        <input id="q" type="search" autocomplete="off" placeholder="キーワード、事件名、事件番号、条文で検索（例：解雇 権利濫用 ／ 特許法104条の3 ／ 平成28(受)2099）" aria-label="検索語">
+        <button type="button" class="clear" id="qClear" aria-label="検索語を消す" hidden>×</button>
+        <button type="submit" class="go">検索</button>
+      </form>
+      <div class="hint">スペース区切りで AND、<code>A OR B</code> か <code>A|B</code> で OR、<code>"語 句"</code> でフレーズ、<code>-語</code> で除外。「刑法二〇〇条」と「刑法200条」、「刑訴法」と「刑事訴訟法」、旧字体と新字体は同じものとして検索します。</div>
+    </section>
+
+    <section class="filters" aria-label="絞り込み">
+      <div class="chips" id="catChips"></div>
+      <div class="chips" id="areaChips" aria-label="分野"></div>
+      <label class="fsel">裁判所
+        <select id="fCourt">
+          <option value="">すべて</option>
+          <option value="最高裁大法廷">最高裁 大法廷</option>
+          <option value="最高裁小法廷">最高裁 小法廷</option>
+          <option value="高等裁判所">高等裁判所</option>
+          <option value="地方裁判所">地方裁判所</option>
+          <option value="家庭裁判所">家庭裁判所</option>
+          <option value="簡易裁判所">簡易裁判所</option>
+          <option value="大審院">大審院</option>
+        </select>
+      </label>
+      <div class="fsel"><label for="fCourtName">裁判所名</label>
+        <input id="fCourtName" list="courtList" placeholder="例：東京地方裁判所" autocomplete="off" style="width:190px">
+        <datalist id="courtList"></datalist>
+      </div>
+      <label class="fsel">種別
+        <select id="fKind">
+          <option value="">すべて</option>
+          <option value="判決">判決</option>
+          <option value="決定">決定</option>
+        </select>
+      </label>
+      <label class="fsel">結果
+        <select id="fResult">
+          <option value="">すべて</option>
+          <option value="棄却">棄却</option>
+          <option value="破棄差戻">破棄差戻</option>
+          <option value="破棄自判">破棄自判</option>
+          <option value="却下">却下</option>
+          <option value="その他">その他</option>
+        </select>
+      </label>
+      <div class="fsel"><label for="fFrom">年</label>
+        <input id="fFrom" type="number" min="1875" max="2030" placeholder="1947" aria-label="開始年（西暦）">
+        <span class="sep">〜</span>
+        <input id="fTo" type="number" min="1875" max="2030" placeholder="2024" aria-label="終了年（西暦）">
+      </div>
+      <label class="fsel">並び順
+        <select id="fSort">
+          <option value="rel">関連度順</option>
+          <option value="new">新しい順</option>
+          <option value="old">古い順</option>
+        </select>
+      </label>
+      <button type="button" class="reset" id="fReset">条件をクリア</button>
+    </section>
+
+    <main class="main">
+      <section class="results" aria-live="polite">
+        <div class="results-head">
+          <div><strong id="resultCount">0</strong> 件 <span id="resultQuery"></span> <span class="datechip" id="dateChip" hidden><span id="dateChipText"></span><button type="button" id="dateChipClear" aria-label="日付の絞り込みを外す">×</button></span> <span class="dupnote" id="dupNote"></span></div>
+          <div class="src rh-actions"><button type="button" class="linkbtn" id="shareBtn" title="いまの検索語・絞り込み条件を含むURLをコピー">検索条件のリンクをコピー</button><button type="button" class="linkbtn" id="saveSearchBtn" title="いまの検索語と絞り込み条件を保存">この検索を保存</button><span id="srcLabel"></span></div>
+        </div>
+        <div class="facets" id="facets" hidden></div>
+        <ol id="resultList"></ol>
+        <div class="more"><button type="button" class="btn" id="moreBtn" hidden>さらに表示</button></div>
+      </section>
+      <aside class="detail" id="detail" aria-label="判例の詳細">
+        <button type="button" class="d-close" id="dClose"><span>← 一覧に戻る</span><span></span></button>
+        <div class="detail-in" id="detailIn"></div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="savedView" hidden>
+    <main class="main">
+      <section class="results saved-list">
+        <div class="blk"><h3>保存した検索</h3><ul id="savedSearches"></ul></div>
+        <div class="blk"><h3>最近の検索</h3><div class="chipsrow" id="recentQueries"></div></div>
+        <div class="blk"><h3>最近見た判例</h3><ul id="recentViewed"></ul></div>
+        <div class="results-head"><div><strong id="savedTotal">0</strong> 件を保存中</div><div class="src">メモはこのブラウザに保存されます</div></div>
+        <div class="io" id="savedIo">
+          <button type="button" class="btn" id="exportJson">JSONで書き出し</button>
+          <button type="button" class="btn" id="exportCsv">CSVで書き出し</button>
+          <label class="btn" for="importFile">読み込み（JSON）<input id="importFile" type="file" accept=".json,application/json" hidden></label>
+          <button type="button" class="btn" id="exportText">テキストで表示</button>
+          <span class="io-state" id="ioState"></span>
+          <textarea id="ioText" class="memo" hidden rows="6" aria-label="書き出したJSON"></textarea>
+        </div>
+        <ol id="savedList"></ol>
+      </section>
+    </main>
+  </div>
+
+  <div id="aboutView" hidden>
+    <section class="about">
+      <h2>このアプリのデータについて</h2>
+      <p>裁判所ウェブサイト「裁判例検索」に掲載されている裁判例の全件（<strong id="aboutTotal">65,468</strong> 件、2025年1月時点のスナップショット）を収録しています。これは「裁判所が公開している裁判例のすべて」であり、日本で言い渡された判決のすべてではありません。裁判所は判例集登載など一部の裁判例のみを公開しており、下級審の大半は掲載されていません。</p>
+
+      <h3>収録内容</h3>
+      <div class="tscroll">
+      <table>
+        <thead><tr><th>判例集</th><th>件数</th><th>主な収録項目</th></tr></thead>
+        <tbody id="aboutCats"></tbody>
+      </table>
+      </div>
+      <p style="margin-top:10px">事件番号・事件名・裁判所・裁判年月日・結果・判例集等の書誌情報に加え、裁判所が付した「判示事項」「裁判要旨」「参照法条」（付されている裁判例のみ）、判決文PDFから抽出した主文の冒頭（約240文字）を収録しています。判決文の全文はこのアプリには入っていません。各判例の「全文PDF」ボタンから裁判所ウェブサイトの原本を開いてください。PDFからのテキスト抽出には誤変換が含まれることがあります。</p>
+      <p>また、憲法・民事・刑事・労働・知的財産・行政の各分野の代表的な判例 <span id="aboutEd">304</span> 件には、編集部による「解説」（通称・要約・キーワード）を付けています。解説は判決原文ではなく要約で、事件番号・裁判年月日・裁判所は裁判所ウェブサイトの公式データと照合して付けていますが、要約の内容は必ず原文で確認してください。一覧では <span class="badge">解説</span> のラベルで示しています。</p>
+      <p>判示事項・要旨・主文の中に現れる「最高裁昭和○年○月○日判決」「平成○年(受)第○号」のような他の判例への言及は、収録データ内の該当判例に自動でリンクしています（事件番号→該当判例、裁判所＋年月日→その日の判例一覧）。参照法条はクリックするとその条文で検索します。同じ判決が複数の判例集に収録されている場合は1件にまとめ、「別収録」として詳細画面に並べています（設定で解除できます）。</p>
+
+      <h3>検索の仕組みと自動付与している情報</h3>
+      <p>検索語と収録テキストは同じ規則で正規化してから比較します。全角・半角、漢数字（「二〇〇条」「第十四条」→「200条」「第14条」）、旧字体（「辯護」→「弁護」など約150字）をそろえ、「刑訴法／刑事訴訟法」「労基法／労働基準法」のような法令の略称は両方の表記で探します。AND のほか OR 検索（<code>A OR B</code>）、フレーズ検索（<code>"語 句"</code>）、除外（<code>-語</code>）が使えます。</p>
+      <p>「分野」の絞り込み（民事・刑事・行政・家事など）は、事件番号の符号から機械的に推定したものです。裁判所の慣例では民事事件にカタカナ（オ・受・ネ・ワ など）、刑事事件にひらがな（あ・う・わ など）、行政事件に「行」付き、家事事件に「家」付きの符号が使われるので、それを手がかりにしています。労働・知的財産は判例集の区分、憲法は参照法条に憲法を含むかで付けています。推定なので誤りを含むことがあります。</p>
+      <p>「審級」欄は、各判例に記録されている原審の裁判所名・事件番号から、同じ収録データの中で原審・上訴審を探してつないだものです。原審が裁判所サイトに掲載されていない場合はつながりません。</p>
+
+      <h3>データの出典とライセンス</h3>
+      <p>裁判例の原データは裁判所ウェブサイト（courts.go.jp）です。本アプリは、同サイトを収集して公開されている <a href="https://github.com/japanese-law-analysis/data_set" target="_blank" rel="noopener">japanese-law-analysis/data_set</a>（CC0）を取り込んでいます。判決は著作権法13条3号により著作権の目的とならないため、再利用・再配布に法的な制約はありません。</p>
+
+      <h3>どのデータ源が一般公開アプリに使えるか</h3>
+      <div class="tscroll">
+      <table>
+        <thead><tr><th>データ源</th><th>収録範囲</th><th>公開アプリでの利用</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td>裁判所ウェブサイト 裁判例検索</td><td>最高裁・下級裁の判例集登載裁判例など（約6.5万件）</td><td class="yes">可（収録済み）</td><td>判決文は著作権の対象外。ただし裁判所は「すべての判決等」を掲載してはいない</td></tr>
+          <tr><td>民事裁判情報データベース（日弁連法務研究財団）</td><td>民事・行政の全判決（年約20万件、電子判決書のみ）</td><td class="cond">条件付き</td><td>有償の提供契約が必要。2026年8月時点で提供開始日は未確定。過去判決の遡及・刑事は対象外</td></tr>
+          <tr><td>Westlaw Japan／判例秘書／D1-Law 等</td><td>網羅的（過去分含む）</td><td class="no">不可</td><td>利用規約で私的・内部利用に限定、複製・公衆送信は禁止。別途ライセンス契約が必要</td></tr>
+          <tr><td>自前で収集・整理したデータ</td><td>任意</td><td class="yes">可</td><td>手元の判決PDF・テキストを取り込む。出典の明示が必要</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>本番化のロードマップ</h3>
+      <div class="phase">
+        <b>フェーズ 1</b><span>裁判所ウェブサイトの裁判例の取り込み（済み）。次は定期クロールによる自動更新と、判決文全文のサーバー側インデックス化（このアプリは書誌・要旨・主文冒頭のみをブラウザ内で検索しています）。</span>
+        <b>フェーズ 2</b><span>民事裁判情報データベースの提供開始に合わせて利用契約を結び、民事・行政判決を追加。仮名処理済みデータの適正利用ルールを実装する。</span>
+        <b>フェーズ 3</b><span>ベクトル検索による類似判例の精度向上、AI要約のキャッシュ、ユーザー登録によるブックマークの端末間同期。</span>
+      </div>
+
+      <h3>この画面で動いているもの</h3>
+      <p>データは圧縮ファイル（合計約16MB）としてページと一緒に配布され、ブラウザ内で展開して検索します。検索・絞り込み・類似判例の計算はすべてブラウザ内で完結し、サーバーもアカウントも不要です。AIによる要約と質問は任意の機能で、claude.ai 上で開いた場合は閲覧者のClaudeアカウントで、それ以外では利用者自身の Anthropic API キーを設定した場合にのみ動きます。ブックマークとメモはブラウザのローカル保存で、他の端末には同期されませんが、「保存した判例」画面から JSON／CSV で書き出し、別の端末で読み込めます。検索語と絞り込み条件は「検索条件のリンクをコピー」で URL として共有できます。</p>
+    </section>
+  </div>
+
+  <div class="cmpbar" id="cmpBar" hidden><span id="cmpText"></span><button type="button" id="cmpOpen">比較を開く</button><button type="button" id="cmpClear">クリア</button></div>
+  <div class="overlay" id="cmpOverlay" hidden><div class="box"><button type="button" class="close" id="cmpClose" aria-label="閉じる">×</button><h3>判例の比較</h3><div class="cmp" id="cmpBody"></div></div></div>
+  <div class="foot">判例レンズ · 原データ：裁判所ウェブサイト（2025年1月時点） · 解説は編集要約 · 正確な内容は原文で確認してください · <a href="terms.html">利用規約・免責事項</a> · <a href="https://github.com/hibix-claude/hanrei-lens/issues" target="_blank" rel="noopener">お問い合わせ（GitHub）</a></div>
+</div>

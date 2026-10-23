@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="裁判所ウェブサイト掲載の裁判例を横断検索できる判例検索アプリ">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>判例レンズ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F5F7FA; --panel:#FFFFFF; --panel-2:#EEF2F7; --sel:#E8EFF8;
+  --ink:#1B2430; --muted:#5C6773; --faint:#8A94A1; --line:#D8DEE6; --line-2:#C3CBD6;
+  --navy:#1F3A5F; --navy-ink:#1F3A5F; --navy-soft:#DCE6F3;
+  --accent:#B8432F; --accent-soft:#F7E3DE;
+  --mark:#FFE59A; --ok:#2E7D5B; --warn:#9A6B00;
+  --shadow:0 10px 30px rgba(20,30,50,.10);
+  --radius:10px;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#12161C; --panel:#1A2029; --panel-2:#222A35; --sel:#243142;
+    --ink:#E7EAEE; --muted:#A3ACB8; --faint:#7B8592; --line:#2C3540; --line-2:#3A4552;
+    --navy:#2C4E7E; --navy-ink:#9DBDE6; --navy-soft:#22334C;
+    --accent:#E2735F; --accent-soft:#3C2620;
+    --mark:#5C4A12; --ok:#6FCF9B; --warn:#E0B454;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#12161C; --panel:#1A2029; --panel-2:#222A35; --sel:#243142;
+  --ink:#E7EAEE; --muted:#A3ACB8; --faint:#7B8592; --line:#2C3540; --line-2:#3A4552;
+  --navy:#2C4E7E; --navy-ink:#9DBDE6; --navy-soft:#22334C;
+  --accent:#E2735F; --accent-soft:#3C2620;
+  --mark:#5C4A12; --ok:#6FCF9B; --warn:#E0B454;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--navy-ink)}
+mark{background:var(--mark);color:inherit;padding:0 .1em;border-radius:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+.app{max-width:1280px;margin:0 auto;padding-block:0 32px;padding-inline:16px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:16px 8px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{width:42px;height:42px;border-radius:8px;background:var(--navy);color:#fff;font-family:var(--serif);font-weight:700;font-size:24px;display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.04em;line-height:1.2}
+.brand-sub{font-size:12px;color:var(--muted);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.tabs{display:flex;gap:4px;background:var(--panel-2);padding:4px;border-radius:999px}
+.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:999px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
+.tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs .count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums}
+.tabs .count[data-zero="1"]{display:none}
+
+/* load bar */
+.loadbar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);padding:2px 4px 6px;font-variant-numeric:tabular-nums}
+.loadbar-in{flex:1;max-width:320px;height:5px;background:var(--panel-2);border-radius:3px;overflow:hidden}
+.loadbar-in i{display:block;height:100%;width:0;background:var(--navy);border-radius:3px;transition:width .2s}
+.loadbar.done{color:var(--ok)}
+.loadbar.done .loadbar-in i{background:var(--ok)}
+.loadbar.err{color:var(--accent)}
+
+/* search */
+.searchbar{padding-block:8px 4px}
+.searchbar form{display:flex;gap:8px;background:var(--panel);border:1.5px solid var(--line-2);border-radius:12px;padding:6px 6px 6px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.searchbar form:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px var(--navy-soft)}
+.searchbar input{flex:1;min-width:0;border:0;background:transparent;font-size:16px;padding:8px 0;outline:none}
+.searchbar input::placeholder{color:var(--faint)}
+.searchbar .go{border:0;background:var(--navy);color:#fff;padding:8px 18px;border-radius:8px;font-weight:700;letter-spacing:.06em}
+.searchbar .clear{border:0;background:transparent;color:var(--muted);padding:0 8px;font-size:18px;line-height:1}
+.hint{font-size:12px;color:var(--muted);padding:6px 4px 0}
+.hint code{background:var(--panel-2);padding:0 6px;border-radius:4px;font-family:inherit}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding-block:10px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:3px 12px;font-size:13px;color:var(--muted)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip.ed{border-style:dashed}
+.chip.ed.on{background:var(--accent);border-color:var(--accent);border-style:solid}
+.fsel{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.fsel select,.fsel input{border:1px solid var(--line-2);background:var(--panel);border-radius:8px;padding:4px 8px;font-size:13px;color:var(--ink)}
+.fsel input[type=number]{width:76px;font-variant-numeric:tabular-nums}
+.fsel .sep{color:var(--faint)}
+.reset{border:0;background:transparent;color:var(--navy-ink);font-size:13px;text-decoration:underline;text-underline-offset:3px;padding:2px 4px}
+.linkbtn{border:0;background:transparent;color:var(--navy-ink);font-size:12px;text-decoration:underline;text-underline-offset:3px;padding:0}
+.chip.area{border-color:var(--line);color:var(--muted);background:var(--panel-2)}
+.chip.area.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.io{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 0 12px}
+.io label.btn{cursor:pointer}
+.io-state{font-size:12px;color:var(--muted)}
+.io textarea{flex-basis:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.lineage{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.lineage li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.lineage li.cur{border-color:var(--navy);background:var(--sel)}
+.lineage li.link{cursor:pointer}
+.lineage li.link:hover{border-color:var(--navy)}
+.lineage .lv{font-size:11px;letter-spacing:.08em;color:var(--faint);white-space:nowrap;padding-top:2px}
+.lineage .t{font-family:var(--serif);font-weight:700}
+.lineage .m{grid-column:2;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.lineage .none{color:var(--faint)}
+
+/* main grid */
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.results-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:0 4px 8px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.results-head strong{color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.results-head .src{font-size:12px;color:var(--faint)}
+#resultList,#savedList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.row{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;transition:border-color .12s,background .12s}
+.row:hover{border-color:var(--line-2)}
+.row.sel{background:var(--sel);border-color:var(--navy)}
+.row .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;align-items:center}
+.row .meta .cat{color:var(--navy-ink);font-weight:500}
+.badge{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 6px;font-size:11px;font-weight:700;line-height:1.6}
+.row .ttl{font-family:var(--serif);font-weight:700;font-size:16px;line-height:1.45;text-wrap:balance}
+.row .ttl .alias{font-family:var(--sans);font-weight:400;font-size:13px;color:var(--muted);margin-left:6px}
+.row .star{align-self:start;border:0;background:transparent;color:var(--faint);font-size:18px;line-height:1;padding:0 2px}
+.row .star.on{color:var(--accent)}
+.row .snip{grid-column:1/-1;font-size:13px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row .snip.summ{color:var(--ink)}
+.empty{background:var(--panel);border:1px dashed var(--line-2);border-radius:var(--radius);padding:28px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:6px}
+.more{display:flex;justify-content:center;padding:14px 0 4px}
+
+/* detail */
+.detail{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);scrollbar-gutter:stable}
+.detail-in{padding:22px 24px 28px}
+.d-close{display:none}
+.d-kicker{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;align-items:center}
+.d-kicker .cat{display:inline-block;background:var(--navy-soft);color:var(--navy-ink);padding:1px 10px;border-radius:999px;font-weight:500}
+.d-title{font-family:var(--serif);font-weight:700;font-size:24px;line-height:1.35;margin:8px 0 2px;text-wrap:balance}
+.d-alias{font-size:14px;color:var(--muted);margin:0 0 6px}
+.d-cite{font-size:13px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:10px 0 14px;font-variant-numeric:tabular-nums}
+.d-cite dt{color:var(--faint);white-space:nowrap}
+.d-cite dd{margin:0}
+.d-actions{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 18px}
+.btn{border:1px solid var(--line-2);background:var(--panel);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.accent{border-color:var(--accent);color:var(--accent)}
+.btn.accent.on{background:var(--accent);color:#fff}
+.btn:disabled{opacity:.55;cursor:default}
+.d-sec{margin:0 0 18px}
+.d-sec h3{font-size:12px;letter-spacing:.14em;color:var(--faint);font-weight:700;margin:0 0 6px}
+.d-sec p{margin:0;max-width:66ch;white-space:pre-line}
+.d-sec .ex{font-size:13px;background:var(--panel-2);border-radius:8px;padding:10px 12px;color:var(--ink);line-height:1.7}
+.d-sec .laws{display:flex;flex-wrap:wrap;gap:6px}
+.d-sec .laws span{background:var(--panel-2);border-radius:6px;padding:2px 8px;font-size:12.5px}
+.d-sec .tags{display:flex;flex-wrap:wrap;gap:6px}
+.d-sec .tags button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:1px 10px;font-size:12.5px;color:var(--muted)}
+.d-sec .tags button:hover{border-color:var(--navy);color:var(--navy-ink)}
+.d-sec.ed{border-left:3px solid var(--accent);padding-left:12px}
+.memo{width:100%;min-height:84px;border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--paper);resize:vertical;line-height:1.6}
+.memo-state{font-size:12px;color:var(--faint);margin-top:4px;min-height:1.2em}
+
+/* AI box */
+.ai{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:14px 16px;margin:0 0 18px}
+.ai-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.ai-head h3{margin:0;font-size:13px;letter-spacing:.06em;color:var(--ink);display:flex;align-items:center;gap:8px}
+.ai-head h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.ai-out{white-space:pre-wrap;line-height:1.75;max-width:66ch;min-height:1.5em;margin:0}
+.ai-out.thinking{color:var(--muted);font-style:italic}
+.ai-note{font-size:12px;color:var(--warn);margin-top:6px}
+.ai-note:empty{display:none}
+.ai-q{display:flex;gap:8px;margin-top:12px}
+.ai-q input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;background:var(--panel)}
+.ai-chat{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.bub{padding:8px 12px;border-radius:10px;max-width:66ch;white-space:pre-wrap;line-height:1.7}
+.bub.u{background:var(--navy-soft);align-self:flex-end;border-bottom-right-radius:3px}
+.bub.a{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:3px}
+.bub.thinking{color:var(--muted);font-style:italic}
+.ai-off{font-size:12.5px;color:var(--muted)}
+
+/* similar */
+.sim{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sim li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.sim li:hover{border-color:var(--navy)}
+.sim .t{font-family:var(--serif);font-weight:700}
+.sim .m{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sim .pct{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.sim .bar{grid-column:1/-1;height:3px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+.sim .bar i{display:block;height:100%;background:var(--navy);border-radius:2px}
+.sim-state{font-size:12px;color:var(--faint)}
+.src-note{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:6px;line-height:1.6}
+
+/* about */
+.about{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 28px;max-width:860px}
+.about h2{font-family:var(--serif);font-size:22px;margin:0 0 6px}
+.about h3{font-size:15px;margin:22px 0 6px}
+.about p{margin:0 0 10px;max-width:70ch}
+.about .phase{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 0}
+.about .phase b{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--navy-ink)}
+.about .phase span{max-width:70ch}
+.about table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+.about th,.about td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
+.about th{color:var(--faint);font-weight:500;font-size:12px}
+.about td.num{text-align:right;white-space:nowrap}
+.about .yes{color:var(--ok);font-weight:700}
+.about .no{color:var(--accent);font-weight:700}
+.about .cond{color:var(--warn);font-weight:700}
+.tscroll{overflow-x:auto}
+.foot{font-size:12px;color:var(--faint);padding-top:20px;text-align:center}
+
+/* saved view */
+.saved-list .row{grid-template-columns:minmax(0,1fr)}
+.saved-list .memo-prev{grid-column:1/-1;font-size:13px;color:var(--ink);background:var(--paper);border-radius:6px;padding:6px 10px;border-left:3px solid var(--accent);white-space:pre-wrap}
+
+@media (max-width: 860px){
+  .main{grid-template-columns:1fr}
+  .detail{position:fixed;inset:0;top:env(safe-area-inset-top,0px);max-height:none;border-radius:0;border:0;box-shadow:none;z-index:50;transform:translateY(100%);transition:transform .22s ease;visibility:hidden}
+  .detail.open{transform:translateY(0);visibility:visible}
+  .d-close{display:inline-flex;position:sticky;top:0;z-index:2;width:100%;justify-content:space-between;align-items:center;background:var(--panel);border:0;border-bottom:1px solid var(--line);padding:10px 16px;font-weight:500;color:var(--navy-ink)}
+  .detail-in{padding:16px 16px 40px}
+  .d-title{font-size:21px}
+}
+@media (max-width: 520px){
+  .top{padding-block:12px 6px}
+  .brand-name{font-size:19px}
+  .tabs button{padding:6px 10px;font-size:13px}
+  .searchbar .go{padding:8px 12px}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">判</div>
+      <div>
+        <div class="brand-name">判例レンズ</div>
+        <div class="brand-sub" id="brandSub">裁判所ウェブサイト掲載の裁判例を横断検索</div>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="表示切替">
+      <button type="button" id="tabSearch" class="on" data-view="search">検索</button>
+      <button type="button" id="tabSaved" data-view="saved">保存した判例 <span class="count" id="savedCount" data-zero="1">0</span></button>
+      <button type="button" id="tabAbout" data-view="about">データについて</button>
+    </nav>
+  </header>
+  <div class="loadbar" id="loadbar" aria-live="polite"><div class="loadbar-in"><i id="loadfill"></i></div><span id="loadtext">裁判例データを読み込んでいます…</span></div>
+
+  <div id="searchView">
+    <section class="searchbar">
+      <form id="searchForm" role="search">
+        <input id="q" type="search" autocomplete="off" placeholder="キーワード、事件名、事件番号、条文で検索（例：解雇 権利濫用 ／ 特許法104条の3 ／ 平成28(受)2099）" aria-label="検索語">
+        <button type="button" class="clear" id="qClear" aria-label="検索語を消す" hidden>×</button>
+        <button type="submit" class="go">検索</button>
+      </form>
+      <div class="hint">スペース区切りで AND、<code>A OR B</code> か <code>A|B</code> で OR、<code>"語 句"</code> でフレーズ、<code>-語</code> で除外。「刑法二〇〇条」と「刑法200条」、「刑訴法」と「刑事訴訟法」、旧字体と新字体は同じものとして検索します。</div>
+    </section>
+
+    <section class="filters" aria-label="絞り込み">
+      <div class="chips" id="catChips"></div>
+      <div class="chips" id="areaChips" aria-label="分野"></div>
+      <label class="fsel">裁判所
+        <select id="fCourt">
+          <option value="">すべて</option>
+          <option value="最高裁大法廷">最高裁 大法廷</option>
+          <option value="最高裁小法廷">最高裁 小法廷</option>
+          <option value="高等裁判所">高等裁判所</option>
+          <option value="地方裁判所">地方裁判所</option>
+          <option value="家庭裁判所">家庭裁判所</option>
+          <option value="簡易裁判所">簡易裁判所</option>
+          <option value="大審院">大審院</option>
+        </select>
+      </label>
+      <div class="fsel"><label for="fCourtName">裁判所名</label>
+        <input id="fCourtName" list="courtList" placeholder="例：東京地方裁判所" autocomplete="off" style="width:190px">
+        <datalist id="courtList"></datalist>
+      </div>
+      <label class="fsel">種別
+        <select id="fKind">
+          <option value="">すべて</option>
+          <option value="判決">判決</option>
+          <option value="決定">決定</option>
+        </select>
+      </label>
+      <label class="fsel">結果
+        <select id="fResult">
+          <option value="">すべて</option>
+          <option value="棄却">棄却</option>
+          <option value="破棄差戻">破棄差戻</option>
+          <option value="破棄自判">破棄自判</option>
+          <option value="却下">却下</option>
+          <option value="その他">その他</option>
+        </select>
+      </label>
+      <div class="fsel"><label for="fFrom">年</label>
+        <input id="fFrom" type="number" min="1875" max="2030" placeholder="1947" aria-label="開始年（西暦）">
+        <span class="sep">〜</span>
+        <input id="fTo" type="number" min="1875" max="2030" placeholder="2024" aria-label="終了年（西暦）">
+      </div>
+      <label class="fsel">並び順
+        <select id="fSort">
+          <option value="rel">関連度順</option>
+          <option value="new">新しい順</option>
+          <option value="old">古い順</option>
+        </select>
+      </label>
+      <button type="button" class="reset" id="fReset">条件をクリア</button>
+    </section>
+
+    <main class="main">
+      <section class="results" aria-live="polite">
+        <div class="results-head">
+          <div><strong id="resultCount">0</strong> 件 <span id="resultQuery"></span></div>
+          <div class="src"><button type="button" class="linkbtn" id="shareBtn" title="いまの検索語・絞り込み条件を含むURLをコピー">検索条件のリンクをコピー</button> · <span id="srcLabel"></span></div>
+        </div>
+        <ol id="resultList"></ol>
+        <div class="more"><button type="button" class="btn" id="moreBtn" hidden>さらに表示</button></div>
+      </section>
+      <aside class="detail" id="detail" aria-label="判例の詳細">
+        <button type="button" class="d-close" id="dClose"><span>← 一覧に戻る</span><span></span></button>
+        <div class="detail-in" id="detailIn"></div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="savedView" hidden>
+    <main class="main">
+      <section class="results saved-list">
+        <div class="results-head"><div><strong id="savedTotal">0</strong> 件を保存中</div><div class="src">メモはこのブラウザに保存されます</div></div>
+        <div class="io" id="savedIo">
+          <button type="button" class="btn" id="exportJson">JSONで書き出し</button>
+          <button type="button" class="btn" id="exportCsv">CSVで書き出し</button>
+          <label class="btn" for="importFile">読み込み（JSON）<input id="importFile" type="file" accept=".json,application/json" hidden></label>
+          <button type="button" class="btn" id="exportText">テキストで表示</button>
+          <span class="io-state" id="ioState"></span>
+          <textarea id="ioText" class="memo" hidden rows="6" aria-label="書き出したJSON"></textarea>
+        </div>
+        <ol id="savedList"></ol>
+      </section>
+    </main>
+  </div>
+
+  <div id="aboutView" hidden>
+    <section class="about">
+      <h2>このアプリのデータについて</h2>
+      <p>裁判所ウェブサイト「裁判例検索」に掲載されている裁判例の全件（<strong id="aboutTotal">65,468</strong> 件、2025年1月時点のスナップショット）を収録しています。これは「裁判所が公開している裁判例のすべて」であり、日本で言い渡された判決のすべてではありません。裁判所は判例集登載など一部の裁判例のみを公開しており、下級審の大半は掲載されていません。</p>
+
+      <h3>収録内容</h3>
+      <div class="tscroll">
+      <table>
+        <thead><tr><th>判例集</th><th>件数</th><th>主な収録項目</th></tr></thead>
+        <tbody id="aboutCats"></tbody>
+      </table>
+      </div>
+      <p style="margin-top:10px">事件番号・事件名・裁判所・裁判年月日・結果・判例集等の書誌情報に加え、裁判所が付した「判示事項」「裁判要旨」「参照法条」（付されている裁判例のみ）、判決文PDFから抽出した主文の冒頭（約240文字）を収録しています。判決文の全文はこのアプリには入っていません。各判例の「全文PDF」ボタンから裁判所ウェブサイトの原本を開いてください。PDFからのテキスト抽出には誤変換が含まれることがあります。</p>
+      <p>また、代表的な最高裁判例など <span id="aboutEd">70</span> 件には、編集部による「解説」（通称・要約・キーワード）を付けています。解説は判決原文ではなく要約です。一覧では <span class="badge">解説</span> のラベルで示しています。</p>
+
+      <h3>検索の仕組みと自動付与している情報</h3>
+      <p>検索語と収録テキストは同じ規則で正規化してから比較します。全角・半角、漢数字（「二〇〇条」「第十四条」→「200条」「第14条」）、旧字体（「辯護」→「弁護」など約150字）をそろえ、「刑訴法／刑事訴訟法」「労基法／労働基準法」のような法令の略称は両方の表記で探します。AND のほか OR 検索（<code>A OR B</code>）、フレーズ検索（<code>"語 句"</code>）、除外（<code>-語</code>）が使えます。</p>
+      <p>「分野」の絞り込み（民事・刑事・行政・家事など）は、事件番号の符号から機械的に推定したものです。裁判所の慣例では民事事件にカタカナ（オ・受・ネ・ワ など）、刑事事件にひらがな（あ・う・わ など）、行政事件に「行」付き、家事事件に「家」付きの符号が使われるので、それを手がかりにしています。労働・知的財産は判例集の区分、憲法は参照法条に憲法を含むかで付けています。推定なので誤りを含むことがあります。</p>
+      <p>「審級」欄は、各判例に記録されている原審の裁判所名・事件番号から、同じ収録データの中で原審・上訴審を探してつないだものです。原審が裁判所サイトに掲載されていない場合はつながりません。</p>
+
+      <h3>データの出典とライセンス</h3>
+      <p>裁判例の原データは裁判所ウェブサイト（courts.go.jp）です。本アプリは、同サイトを収集して公開されている <a href="https://github.com/japanese-law-analysis/data_set" target="_blank" rel="noopener">japanese-law-analysis/data_set</a>（CC0）を取り込んでいます。判決は著作権法13条3号により著作権の目的とならないため、再利用・再配布に法的な制約はありません。</p>
+
+      <h3>どのデータ源が一般公開アプリに使えるか</h3>
+      <div class="tscroll">
+      <table>
+        <thead><tr><th>データ源</th><th>収録範囲</th><th>公開アプリでの利用</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td>裁判所ウェブサイト 裁判例検索</td><td>最高裁・下級裁の判例集登載裁判例など（約6.5万件）</td><td class="yes">可（収録済み）</td><td>判決文は著作権の対象外。ただし裁判所は「すべての判決等」を掲載してはいない</td></tr>
+          <tr><td>民事裁判情報データベース（日弁連法務研究財団）</td><td>民事・行政の全判決（年約20万件、電子判決書のみ）</td><td class="cond">条件付き</td><td>有償の提供契約が必要。2026年8月時点で提供開始日は未確定。過去判決の遡及・刑事は対象外</td></tr>
+          <tr><td>Westlaw Japan／判例秘書／D1-Law 等</td><td>網羅的（過去分含む）</td><td class="no">不可</td><td>利用規約で私的・内部利用に限定、複製・公衆送信は禁止。別途ライセンス契約が必要</td></tr>
+          <tr><td>自前で収集・整理したデータ</td><td>任意</td><td class="yes">可</td><td>手元の判決PDF・テキストを取り込む。出典の明示が必要</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>本番化のロードマップ</h3>
+      <div class="phase">
+        <b>フェーズ 1</b><span>裁判所ウェブサイトの裁判例の取り込み（済み）。次は定期クロールによる自動更新と、判決文全文のサーバー側インデックス化（このアプリは書誌・要旨・主文冒頭のみをブラウザ内で検索しています）。</span>
+        <b>フェーズ 2</b><span>民事裁判情報データベースの提供開始に合わせて利用契約を結び、民事・行政判決を追加。仮名処理済みデータの適正利用ルールを実装する。</span>
+        <b>フェーズ 3</b><span>ベクトル検索による類似判例の精度向上、AI要約のキャッシュ、ユーザー登録によるブックマークの端末間同期。</span>
+      </div>
+
+      <h3>この画面で動いているもの</h3>
+      <p>データは圧縮ファイル（合計約16MB）としてページと一緒に配布され、ブラウザ内で展開して検索します。検索・絞り込み・類似判例の計算はすべてブラウザ内で完結し、サーバーもアカウントも不要です。AIによる要約と質問は任意の機能で、claude.ai 上で開いた場合は閲覧者のClaudeアカウントで、それ以外では利用者自身の Anthropic API キーを設定した場合にのみ動きます。ブックマークとメモはブラウザのローカル保存で、他の端末には同期されませんが、「保存した判例」画面から JSON／CSV で書き出し、別の端末で読み込めます。検索語と絞り込み条件は「検索条件のリンクをコピー」で URL として共有できます。</p>
+    </section>
+  </div>
+
+  <div class="foot">判例レンズ · 原データ：裁判所ウェブサイト（2025年1月時点） · 解説は編集要約 · 正確な内容は原文で確認してください</div>
+</div>
+
+<script>
+// 編集解説つきの代表的裁判例。lid は裁判所ウェブサイトの裁判例ID（0 は未収録）。holdings・summary は編集要約。
+const CASES = [
+{id:"c001",lid:51807,name:"尊属殺重罰規定違憲判決",caseNo:"昭和45(あ)1310",date:"1973-04-04",wareki:"昭和48年4月4日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄自判",reporter:"刑集27巻3号265頁",areas:["憲法","刑事"],
+ holdings:"尊属殺の法定刑を死刑又は無期懲役刑のみに限っている刑法200条は、憲法14条1項に違反する。",
+ summary:"尊属に対する尊重報恩という道義を保護するという立法目的自体は不合理とはいえない。しかし、法定刑を死刑・無期懲役に限定し、執行猶予を付す余地をほとんど残さない点は、普通殺に関する刑法199条の法定刑と比べて著しく不合理な差別的取扱いであり、憲法14条1項に違反して無効である。最高裁が法令を違憲と判断した最初の判決。",
+ laws:["憲法14条1項","刑法199条","刑法200条"],tags:["法の下の平等","法令違憲","尊属殺","刑罰の均衡"]},
+{id:"c002",lid:51936,name:"薬事法距離制限違憲判決",caseNo:"昭和43(行ツ)120",date:"1975-04-30",wareki:"昭和50年4月30日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄自判",reporter:"民集29巻4号572頁",areas:["憲法","行政"],
+ holdings:"薬局開設の許可条件として適正配置（距離制限）を定める薬事法6条2項・4項は、憲法22条1項に違反する。",
+ summary:"職業の許可制は、重要な公共の利益のために必要かつ合理的な措置であることを要し、国民の生命・健康に対する危険防止という消極的・警察的目的の規制は、より緩やかな規制では目的を達成できない場合に限って許される。薬局の距離制限は、不良医薬品の供給防止という目的との関係で必要かつ合理的とはいえず、違憲・無効である。",
+ laws:["憲法22条1項","薬事法6条2項","薬事法6条4項"],tags:["職業選択の自由","営業の自由","消極目的規制","法令違憲"]},
+{id:"c003",lid:55203,name:"森林法共有林分割制限違憲判決",caseNo:"昭和59(オ)805",date:"1987-04-22",wareki:"昭和62年4月22日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"民集41巻3号408頁",areas:["憲法","民事"],
+ holdings:"共有森林につき持分価額2分の1以下の共有者の分割請求を禁じる森林法186条は、憲法29条2項に違反する。",
+ summary:"財産権に対する規制は、規制目的が公共の福祉に合致し、規制手段が目的達成のため必要性・合理性を有していなければならない。森林法186条は森林経営の安定を目的とするが、共有林の分割を制限することがその目的に合理的に結びつくとはいえず、必要な限度を超えた規制であるとして違憲とされた。",
+ laws:["憲法29条2項","森林法186条","民法256条1項"],tags:["財産権","共有物分割","法令違憲","規制目的二分論"]},
+{id:"c004",lid:57038,name:"郵便法違憲判決",caseNo:"平成11(オ)1767",date:"2002-09-11",wareki:"平成14年9月11日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"民集56巻7号1439頁",areas:["憲法","民事"],
+ holdings:"書留郵便物について郵便業務従事者の故意又は重過失による損害の賠償責任を免除・制限する郵便法68条・73条の規定は、憲法17条に違反する。",
+ summary:"憲法17条は国家賠償の要件を法律に委ねているが、立法裁量は無制限ではなく、免責・制限の目的の正当性とその手段の合理性・必要性を総合的に判断する必要がある。書留郵便物について故意・重過失による損害の賠償責任まで免除・制限する部分、および特別送達郵便物について軽過失による損害の賠償責任を免除・制限する部分は、合理性・必要性を欠き違憲である。",
+ laws:["憲法17条","郵便法68条","郵便法73条","国家賠償法"],tags:["国家賠償","立法裁量","法令違憲","書留"]},
+{id:"c005",lid:52338,name:"在外日本人選挙権訴訟",caseNo:"平成13(行ツ)82 ほか",date:"2005-09-14",wareki:"平成17年9月14日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"一部破棄自判",reporter:"民集59巻7号2087頁",areas:["憲法","行政"],
+ holdings:"在外国民に選挙区選挙の投票を認めていなかった公職選挙法の規定は憲法15条1項・3項、43条1項、44条ただし書に違反する。立法不作為を理由とする国家賠償請求を認容した。",
+ summary:"国民の選挙権またはその行使を制限するには、やむを得ないと認められる事由がなければならない。在外国民の投票を長期にわたり認めなかった立法不作為は、国会が正当な理由なく長期にわたり立法措置を怠った場合に当たり、例外的に国家賠償法上違法となる。次回の選挙において在外国民が投票できる地位にあることの確認請求も認められた。",
+ laws:["憲法15条1項","憲法15条3項","憲法43条1項","憲法44条","公職選挙法","国家賠償法1条1項"],tags:["選挙権","立法不作為","国家賠償","確認訴訟"]},
+{id:"c006",lid:36415,name:"国籍法違憲判決",caseNo:"平成18(行ツ)135",date:"2008-06-04",wareki:"平成20年6月4日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄自判",reporter:"民集62巻6号1367頁",areas:["憲法","家族"],
+ holdings:"日本国民である父から出生後に認知された子について、父母の婚姻を国籍取得の要件とする国籍法3条1項は、遅くとも平成15年当時には憲法14条1項に違反していた。",
+ summary:"国籍は重要な法的地位であり、子にとって自らの意思や努力で変えられない事柄を理由に不利益を及ぼすことは、慎重な検討を要する。父母の婚姻という要件は、家族生活の実態の変化や国際的動向に照らして立法目的との合理的関連性を失っており、違憲である。違憲部分を除いた規定に基づき、届出による国籍取得を認めた。",
+ laws:["憲法14条1項","国籍法3条1項"],tags:["法の下の平等","国籍","嫡出","法令違憲"]},
+{id:"c007",lid:83520,name:"非嫡出子相続分違憲決定",caseNo:"平成24(ク)984・985",date:"2013-09-04",wareki:"平成25年9月4日",court:"最高裁判所",bench:"大法廷",kind:"決定",result:"破棄差戻",reporter:"民集67巻6号1320頁",areas:["憲法","家族","民事"],
+ holdings:"嫡出でない子の相続分を嫡出子の2分の1とする民法900条4号ただし書前段は、遅くとも平成13年7月当時において憲法14条1項に違反していた。",
+ summary:"家族形態の多様化、国民意識の変化、諸外国の立法動向、国際人権条約上の指摘などを総合すると、父母が婚姻関係になかったという子が自ら選択できない事柄を理由に不利益を及ぼすことは許されない。本決定の違憲判断は、すでに確定した遺産分割等の法律関係には影響を及ぼさないとされた。",
+ laws:["憲法14条1項","民法900条4号"],tags:["法の下の平等","相続分","非嫡出子","法令違憲"]},
+{id:"c008",lid:85547,name:"再婚禁止期間違憲判決",caseNo:"平成25(オ)1079",date:"2015-12-16",wareki:"平成27年12月16日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集69巻8号2427頁",areas:["憲法","家族"],
+ holdings:"女性についてのみ6か月の再婚禁止期間を定める民法733条1項のうち、100日を超えて再婚を禁止する部分は憲法14条1項・24条2項に違反する。",
+ summary:"再婚禁止期間の立法目的である父性推定の重複回避との関係で、100日の禁止期間は合理性を有するが、それを超える部分は医療・科学技術の発達や社会状況の変化により合理性を欠くに至った。ただし、国会が正当な理由なく立法措置を怠ったとまではいえず、国家賠償法上の違法はないとして請求は棄却された。",
+ laws:["憲法14条1項","憲法24条2項","民法733条1項","国家賠償法1条1項"],tags:["法の下の平等","婚姻","再婚禁止期間","法令違憲"]},
+{id:"c009",lid:85546,name:"夫婦同氏制合憲判決",caseNo:"平成26(オ)1023",date:"2015-12-16",wareki:"平成27年12月16日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集69巻8号2586頁",areas:["憲法","家族"],
+ holdings:"夫婦が婚姻の際に夫又は妻の氏を称すると定める民法750条は、憲法13条、14条1項、24条に違反しない。",
+ summary:"氏の変更を強制されない自由は憲法13条によって保障される人格権の一内容とはいえない。夫婦同氏制は形式的には性別による不平等を定めたものではなく、家族の呼称を一つに定めることには合理性がある。通称使用の広がりにより不利益は一定程度緩和されており、制度の在り方は国会で論ぜられ判断されるべきとした。",
+ laws:["憲法13条","憲法14条1項","憲法24条","民法750条"],tags:["婚姻","氏","人格権","立法裁量"]},
+{id:"c010",lid:52665,name:"北方ジャーナル事件",caseNo:"昭和56(オ)609",date:"1986-06-11",wareki:"昭和61年6月11日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集40巻4号872頁",areas:["憲法","民事"],
+ holdings:"名誉毀損のおそれのある出版物の事前差止めは原則として許されないが、表現内容が真実でなく又は専ら公益を図る目的でないことが明白で、かつ被害者が重大で著しく回復困難な損害を被るおそれがあるときは例外的に許される。",
+ summary:"出版物の頒布等の事前差止めは表現の自由に対する重大な制約であり、公務員や公職の候補者に対する評価・批判に関する表現については原則として許されない。ただし、上記の厳格な要件を満たす場合には、人格権としての名誉権に基づく差止めが例外的に認められる。",
+ laws:["憲法21条","民法709条","民法710条","民法723条"],tags:["表現の自由","事前抑制","名誉毀損","差止め"]},
+{id:"c011",lid:51931,name:"三菱樹脂事件",caseNo:"昭和43(オ)932",date:"1973-12-12",wareki:"昭和48年12月12日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"民集27巻11号1536頁",areas:["憲法","労働"],
+ holdings:"憲法の自由権的基本権の保障規定は私人相互の関係を直接規律するものではなく、企業が特定の思想・信条を有する者の雇入れを拒んでも当然に違法とはいえない。",
+ summary:"憲法19条・14条の規定は国または公共団体と個人との関係を規律するものであり、私人間の関係には直接適用されない。私人間の利益衝突は民法1条、90条や不法行為に関する規定の適正な運用によって調整される（間接適用説）。企業には契約締結の自由があり、採用にあたり応募者の思想・信条を調査し、それを理由に採用を拒否しても違法ではない。",
+ laws:["憲法14条","憲法19条","民法1条","民法90条","民法709条"],tags:["私人間効力","思想良心の自由","採用の自由","試用期間"]},
+{id:"c012",lid:53530,name:"苫米地事件",caseNo:"昭和30(オ)96",date:"1960-06-08",wareki:"昭和35年6月8日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集14巻7号1206頁",areas:["憲法"],
+ holdings:"衆議院の解散のような直接国家統治の基本に関する高度に政治性のある国家行為は、裁判所の審査権の外にある。",
+ summary:"三権分立のもと、高度に政治性のある国家行為の有効性の判断は、主権者である国民に対して政治的責任を負う政府・国会等の政治部門の判断に委ねられ、最終的には国民の政治判断に委ねられるべきものである。衆議院の解散の効力について、裁判所はその有効無効を審査しない（統治行為論）。",
+ laws:["憲法7条","憲法69条","憲法81条"],tags:["統治行為","衆議院の解散","司法審査の限界"]},
+{id:"c013",lid:55816,name:"砂川事件",caseNo:"昭和34(あ)710",date:"1959-12-16",wareki:"昭和34年12月16日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"刑集13巻13号3225頁",areas:["憲法","刑事"],
+ holdings:"日米安全保障条約のように高度の政治性を有する条約は、一見極めて明白に違憲無効であると認められない限り、裁判所の司法審査権の範囲外にある。",
+ summary:"憲法9条は日本が主権国として持つ固有の自衛権を否定していない。安保条約は主権国としての日本の存立の基礎に極めて重大な関係を持つ高度の政治性を有し、その内容の違憲審査は純司法的機能を使命とする司法裁判所の審査には原則としてなじまず、第一次的には内閣・国会の判断に従うべきである。",
+ laws:["憲法9条","憲法98条2項","日米安全保障条約","刑事特別法2条"],tags:["統治行為","安保条約","自衛権","司法審査の限界"]},
+{id:"c014",lid:50906,name:"全農林警職法事件",caseNo:"昭和43(あ)2780",date:"1973-04-25",wareki:"昭和48年4月25日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"刑集27巻4号547頁",areas:["憲法","労働","刑事"],
+ holdings:"国家公務員の争議行為を一律に禁止し、そのあおり行為等を処罰する国家公務員法の規定は憲法28条に違反しない。",
+ summary:"公務員の地位の特殊性と職務の公共性に照らし、争議行為の禁止は勤労者の団結権等を保障した憲法28条に違反しない。公務員の勤務条件は法律・予算によって定められるべきもので、争議行為は議会制民主主義に背馳し、市場の抑制力も欠く。それまでの全逓東京中郵事件判決等の限定的解釈を改めた。",
+ laws:["憲法28条","国家公務員法98条","国家公務員法110条1項17号"],tags:["公務員の労働基本権","争議行為","判例変更"]},
+{id:"c015",lid:55154,name:"堀木訴訟",caseNo:"昭和51(行ツ)30",date:"1982-07-07",wareki:"昭和57年7月7日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集36巻7号1235頁",areas:["憲法","行政"],
+ holdings:"憲法25条の規定の趣旨を具体的立法として実現するには立法府の広い裁量が認められ、著しく合理性を欠き明らかに裁量の逸脱・濫用と見ざるを得ない場合を除き、裁判所の審査判断に適しない。",
+ summary:"「健康で文化的な最低限度の生活」は抽象的・相対的な概念で、その具体化には高度の専門技術的考察と政策的判断を要する。障害福祉年金と児童扶養手当の併給を禁止する規定は、立法裁量の範囲内であり憲法25条・14条に違反しない。",
+ laws:["憲法25条","憲法14条1項","児童扶養手当法4条3項3号"],tags:["生存権","立法裁量","併給禁止","社会保障"]},
+{id:"c016",lid:54970,name:"朝日訴訟",caseNo:"昭和39(行ツ)14",date:"1967-05-24",wareki:"昭和42年5月24日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"訴訟終了",reporter:"民集21巻5号1043頁",areas:["憲法","行政"],
+ holdings:"生活保護受給権は一身専属の権利であり相続の対象とならず、上告人の死亡により訴訟は終了する。なお憲法25条1項は直接個々の国民に具体的権利を賦与したものではない。",
+ summary:"生活保護法に基づく保護受給権は被保護者自身の最低限度の生活を維持するための権利で、被保護者の死亡により当然消滅する。「念のため」として付された意見において、何が健康で文化的な最低限度の生活かの認定判断は厚生大臣の合目的的裁量に委ねられ、その裁量権の限界を超え又は濫用した場合に限り違法となりうるとされた。",
+ laws:["憲法25条","生活保護法8条","生活保護法9条"],tags:["生存権","プログラム規定","生活保護","一身専属"]},
+{id:"c017",lid:51271,name:"チャタレー事件",caseNo:"昭和28(あ)1713",date:"1957-03-13",wareki:"昭和32年3月13日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"刑集11巻3号997頁",areas:["憲法","刑事"],
+ holdings:"刑法175条のわいせつ文書とは、徒らに性欲を興奮又は刺激せしめ、普通人の正常な性的羞恥心を害し、善良な性的道義観念に反するものをいう。",
+ summary:"翻訳小説の出版がわいせつ文書販売罪に問われた事件。芸術的作品であってもわいせつ性を否定されるものではなく、芸術性とわいせつ性は次元を異にする。性的秩序を守り最小限度の性道徳を維持することは公共の福祉の内容をなし、出版の自由も公共の福祉によって制限される。",
+ laws:["憲法21条","刑法175条"],tags:["表現の自由","わいせつ","公共の福祉","出版"]},
+{id:"c018",lid:50977,name:"博多駅テレビフィルム提出命令事件",caseNo:"昭和44(し)68",date:"1969-11-26",wareki:"昭和44年11月26日",court:"最高裁判所",bench:"大法廷",kind:"決定",result:"特別抗告棄却",reporter:"刑集23巻11号1490頁",areas:["憲法","刑事"],
+ holdings:"報道の自由は憲法21条の保障のもとにあり、報道のための取材の自由も憲法21条の精神に照らし十分尊重に値する。取材フィルムの提出命令の可否は、公正な刑事裁判実現の必要性と取材の自由が妨げられる程度等を比較衡量して決する。",
+ summary:"報道機関の報道は国民の知る権利に奉仕するものであり、取材の自由も尊重されるべきである。しかし公正な刑事裁判の実現という憲法上の要請があるときは、取材の自由もある程度の制約を受ける。本件フィルムは証拠上必要性が高く、報道機関の不利益は将来の取材の自由が妨げられるおそれにとどまるとして、提出命令は適法とされた。",
+ laws:["憲法21条","刑事訴訟法99条","刑事訴訟法1条"],tags:["報道の自由","取材の自由","比較衡量","知る権利"]},
+{id:"c019",lid:54189,name:"津地鎮祭事件",caseNo:"昭和46(行ツ)69",date:"1977-07-13",wareki:"昭和52年7月13日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄自判",reporter:"民集31巻4号533頁",areas:["憲法","行政"],
+ holdings:"憲法20条3項が禁止する宗教的活動とは、国及びその機関の活動で宗教とのかかわり合いをもつすべての行為ではなく、行為の目的が宗教的意義をもち、その効果が宗教に対する援助・助長・促進又は圧迫・干渉等になるような行為をいう。",
+ summary:"市が市体育館の起工式を神式の地鎮祭として挙行し公金を支出したことについて、地鎮祭は建築工事の慣習化した社会的儀礼であり、その目的は世俗的で、効果も神道を援助・助長するものではないとして、宗教的活動には当たらないとした。いわゆる目的効果基準を示した判決。",
+ laws:["憲法20条3項","憲法89条","地方自治法242条の2"],tags:["政教分離","目的効果基準","住民訴訟","地鎮祭"]},
+{id:"c020",lid:54777,name:"愛媛玉串料訴訟",caseNo:"平成4(行ツ)156",date:"1997-04-02",wareki:"平成9年4月2日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄自判",reporter:"民集51巻4号1673頁",areas:["憲法","行政"],
+ holdings:"県が靖国神社の例大祭等に際し玉串料等を公金から支出して奉納したことは、憲法20条3項の禁止する宗教的活動に当たり、憲法89条にも違反する。",
+ summary:"玉串料等の奉納は、地鎮祭のような慣習化した社会的儀礼とはいえず、その目的が宗教的意義を持つことを免れず、特定の宗教団体との間にのみ意識的に特別のかかわり合いを持つことになる。一般人に対して県が特定の宗教団体を特別に支援しているとの印象を与え、特定の宗教への関心を呼び起こすものであり違憲。",
+ laws:["憲法20条3項","憲法89条","地方自治法242条の2"],tags:["政教分離","目的効果基準","住民訴訟","玉串料"]},
+{id:"c021",lid:38347,name:"空知太神社事件",caseNo:"平成19(行ツ)260",date:"2010-01-20",wareki:"平成22年1月20日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"民集64巻1号1頁",areas:["憲法","行政"],
+ holdings:"市が神社施設の敷地として市有地を無償で提供している状態は、諸般の事情を考慮し社会通念に照らして総合的に判断すると、憲法89条・20条1項後段に違反する。",
+ summary:"国公有地が無償で宗教的施設の敷地として利用されている状態が政教分離原則に違反するかは、施設の性格、無償提供に至った経緯、利用の態様、一般人の評価等を考慮して総合的に判断すべきである。本件では違憲状態にあるが、その解消手段には撤去以外の合理的方法もありうるとして差し戻された。",
+ laws:["憲法20条1項","憲法89条","地方自治法242条の2"],tags:["政教分離","総合判断","公有地","住民訴訟"]},
+{id:"c022",lid:53234,name:"衆議院議員定数不均衡訴訟（昭和51年）",caseNo:"昭和49(行ツ)75",date:"1976-04-14",wareki:"昭和51年4月14日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集30巻3号223頁",areas:["憲法","行政"],
+ holdings:"議員定数配分規定は、投票価値の平等の要求に反する程度となり、かつ合理的期間内にその是正が行われない場合に憲法14条1項等に違反する。本件配分規定は違憲であるが、事情判決の法理により選挙自体は無効としない。",
+ summary:"各選挙人の投票価値の平等は憲法の要求するところであり、最大較差約1対5に達していた本件定数配分規定は、合理的期間内に是正されなかったものとして違憲である。ただし選挙を無効とすると憲法の予定しない事態を生じるため、行政事件訴訟法31条の事情判決の法理を適用し、主文で違法を宣言するにとどめた。",
+ laws:["憲法14条1項","憲法15条","憲法44条","公職選挙法204条","行政事件訴訟法31条"],tags:["投票価値の平等","一票の較差","事情判決","定数配分"]},
+{id:"c023",lid:51070,name:"徳島市公安条例事件",caseNo:"昭和48(あ)910",date:"1975-09-10",wareki:"昭和50年9月10日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"刑集29巻8号489頁",areas:["憲法","刑事","行政"],
+ holdings:"刑罰法規の定める犯罪構成要件があいまい不明確のゆえに憲法31条に違反するかは、通常の判断能力を有する一般人の理解において具体的場合に当該行為がその適用を受けるかどうかの判断を可能ならしめる基準が読みとれるかによって決する。",
+ summary:"「交通秩序を維持すること」を集団行進の遵守事項とする市条例の規定は、一般人が殊更な交通秩序の阻害をもたらす行為を禁止していると理解できるため、不明確とはいえない。また条例が国の法令に違反するかは、両者の対象事項と規定文言を対比するのみでなく、それぞれの趣旨・目的・内容・効果を比較して矛盾抵触があるかで判断する。",
+ laws:["憲法31条","憲法94条","道路交通法77条","徳島市公安条例3条"],tags:["明確性の原則","条例と法律","集団行進","漠然性"]},
+{id:"c024",lid:0,name:"麹町中学内申書事件",caseNo:"昭和57(オ)915",date:"1988-07-15",wareki:"昭和63年7月15日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"上告棄却",reporter:"判時1287号65頁",areas:["憲法","民事"],
+ holdings:"内申書に生徒の学生運動等の外部的活動を記載しても、その思想・信条そのものを記載したものではなく、憲法19条・21条に違反しない。",
+ summary:"高校入試の内申書に「校内において麹町中全共闘を名乗り機関紙を発行した」等の記載がされたことについて、記載内容は生徒の思想・信条そのものではなく、これを了知しうるものでもないから、記載に係る外部的行為によって思想・信条を了知しうるとはいえず、これを入学者選抜の資料に供したことは違法ではないとした。",
+ laws:["憲法19条","憲法21条","憲法26条","民法709条"],tags:["思想良心の自由","内申書","教育","表現の自由"]},
+{id:"c025",lid:55882,name:"エホバの証人剣道拒否事件",caseNo:"平成7(行ツ)74",date:"1996-03-08",wareki:"平成8年3月8日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"上告棄却",reporter:"民集50巻3号469頁",areas:["憲法","行政"],
+ holdings:"信仰上の理由で剣道実技への参加を拒否した学生に対し、代替措置を検討することもなく行われた原級留置処分・退学処分は、社会観念上著しく妥当を欠き裁量権の範囲を超え違法である。",
+ summary:"高等専門学校における剣道実技の履修は必須のものとはいえず、学生の拒否は信仰の核心部分と密接に関連する真摯なものであった。退学処分は学生の身分を剥奪する重大な措置であり、他の体育種目やレポート提出等の代替措置が可能であったにもかかわらず考慮しなかった学校長の判断は、裁量権の逸脱に当たる。",
+ laws:["憲法20条","学校教育法","学校教育法施行規則"],tags:["信教の自由","裁量権の逸脱","退学処分","代替措置"]},
+{id:"c026",lid:52449,name:"泉佐野市民会館事件",caseNo:"平成元(オ)762",date:"1995-03-07",wareki:"平成7年3月7日",court:"最高裁判所",bench:"第三小法廷",kind:"判決",result:"上告棄却",reporter:"民集49巻3号687頁",areas:["憲法","行政"],
+ holdings:"集会の用に供される公の施設の利用を拒否できるのは、利用によって他の基本的人権が侵害され公共の安全が損なわれる危険を回避する必要性が優越する場合に限られ、その危険性は明らかな差し迫った危険の発生が具体的に予見されることを要する。",
+ summary:"市民会館条例の「公の秩序をみだすおそれがある場合」という不許可事由は、集会の自由を保障する憲法21条の趣旨に照らして厳格に限定解釈すべきである。本件では対立する団体との衝突により生命・身体に対する危険が具体的に予見されたとして不許可処分は適法とされた。",
+ laws:["憲法21条","地方自治法244条","泉佐野市民会館条例7条"],tags:["集会の自由","公の施設","明白かつ現在の危険","限定解釈"]},
+{id:"c027",lid:53375,name:"成田新法事件",caseNo:"昭和61(行ツ)11",date:"1992-07-01",wareki:"平成4年7月1日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集46巻5号437頁",areas:["憲法","行政"],
+ holdings:"憲法31条の定める法定手続の保障は行政手続にも及びうるが、行政処分の相手方に事前の告知・弁解・防御の機会を与えるかどうかは、制限を受ける権利利益の内容・性質と達成しようとする公益の内容・程度・緊急性等を総合較量して決定される。",
+ summary:"いわゆる成田新法に基づく工作物使用禁止命令について、暴力主義的破壊活動を防止するという公益の高度の必要性と緊急性に照らし、事前に告知・弁解・防御の機会を与える旨の規定がなくとも憲法31条に違反しないとした。命令によって制限される集会の自由についても、憲法21条に違反しない。",
+ laws:["憲法31条","憲法21条","憲法35条","新東京国際空港の安全確保に関する緊急措置法3条"],tags:["適正手続","行政手続","告知と聴聞","総合較量"]},
+{id:"c028",lid:51765,name:"京都府学連事件",caseNo:"昭和40(あ)1187",date:"1969-12-24",wareki:"昭和44年12月24日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"刑集23巻12号1625頁",areas:["憲法","刑事"],
+ holdings:"何人もその承諾なしにみだりにその容ぼう・姿態を撮影されない自由を有する。ただし現に犯罪が行われ又は行われた後間がないと認められ、証拠保全の必要性・緊急性があり、撮影が一般的に許容される限度を超えない相当な方法で行われる場合、警察官による写真撮影は許容される。",
+ summary:"個人の私生活上の自由の一つとして、承諾なしに容ぼう等を撮影されない自由が憲法13条により保障される。デモ行進の許可条件違反の状況を確認するために警察官が行った写真撮影は、上記の要件を満たし適法であり、これに対する公務執行妨害罪の成立が認められた。",
+ laws:["憲法13条","憲法35条","刑法95条1項"],tags:["肖像権","プライバシー","写真撮影","任意捜査"]},
+{id:"c029",lid:52357,name:"早稲田大学講演会名簿提出事件",caseNo:"平成14(受)1656",date:"2003-09-12",wareki:"平成15年9月12日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"破棄差戻",reporter:"民集57巻8号973頁",areas:["民事","憲法"],
+ holdings:"学籍番号、氏名、住所及び電話番号は、プライバシーに係る情報として法的保護の対象となり、本人の同意を得ずに警察に開示した大学の行為は不法行為を構成する。",
+ summary:"外国要人の講演会に参加を申し込んだ学生の名簿を大学が無断で警察に提出した事件。個人識別等のための単純な情報であっても、本人が自己の欲しない他者にはみだりに開示されたくないと考えることは自然であり、その期待は保護されるべきである。同意を得ることは容易であったにもかかわらず無断で開示したことは、プライバシーの侵害として不法行為に当たる。",
+ laws:["民法709条","民法710条","憲法13条"],tags:["プライバシー","個人情報","不法行為","大学"]},
+{id:"c030",lid:35933,name:"住基ネット訴訟",caseNo:"平成19(オ)403・平成19(受)454",date:"2008-03-06",wareki:"平成20年3月6日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"破棄自判",reporter:"民集62巻3号665頁",areas:["憲法","行政"],
+ holdings:"個人に関する情報をみだりに第三者に開示又は公表されない自由は憲法13条により保障されるが、住民基本台帳ネットワークシステムによる本人確認情報の管理・利用等は、この自由を侵害するものではない。",
+ summary:"本人確認情報は秘匿性の高い情報とはいえず、住基ネットのシステム上の安全性や法制度上の保護措置に照らし、正当な行政目的の範囲を逸脱して第三者に開示・公表される具体的な危険は認められない。したがって行政機関が住基ネットにより住民の本人確認情報を管理・利用することは憲法13条に違反しない。",
+ laws:["憲法13条","住民基本台帳法30条の5"],tags:["プライバシー","個人情報","住基ネット","自己情報コントロール"]},
+{id:"c031",lid:81179,name:"衆議院一人別枠方式違憲状態判決",caseNo:"平成22(行ツ)207",date:"2011-03-23",wareki:"平成23年3月23日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集65巻2号755頁",areas:["憲法","行政"],
+ holdings:"一人別枠方式を含む衆議院小選挙区の選挙区割りは、憲法の投票価値の平等の要求に反する状態に至っていたが、憲法上要求される合理的期間内における是正がされなかったとはいえず、憲法に違反しない。",
+ summary:"各都道府県にあらかじめ1議席を配分する一人別枠方式は、制度導入時の合理性が失われており、投票価値の較差を生じさせる主要な要因となっていた。本件選挙時点では違憲状態にあったが、合理的期間内の是正がされなかったとまではいえないとして、選挙を無効とはしなかった。できるだけ速やかに一人別枠方式を廃止し、区割規定を改正することが求められるとした。",
+ laws:["憲法14条1項","憲法43条","公職選挙法13条","衆議院議員選挙区画定審議会設置法3条"],tags:["投票価値の平等","一票の較差","違憲状態","一人別枠方式"]},
+{id:"c032",lid:91190,name:"在外邦人国民審査権訴訟",caseNo:"令和2(行ツ)255 ほか",date:"2022-05-25",wareki:"令和4年5月25日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集76巻4号711頁",areas:["憲法","行政"],
+ holdings:"在外国民に最高裁判所裁判官の国民審査権の行使を認めていない国民審査法は、憲法15条1項、79条2項・3項に違反する。",
+ summary:"国民審査権は選挙権と同様の性質を有し、その行使を制限するにはやむを得ない事由がなければならない。在外国民に審査権の行使を全く認めていないことについてやむを得ない事由があるとはいえず、違憲である。次回の国民審査において審査権を行使できる地位にあることの確認請求を認容し、立法不作為の違法を理由とする国家賠償請求も認容した。",
+ laws:["憲法15条1項","憲法79条2項","憲法79条3項","最高裁判所裁判官国民審査法","国家賠償法1条1項"],tags:["国民審査","選挙権","立法不作為","法令違憲"]},
+{id:"c033",lid:90039,name:"孔子廟訴訟",caseNo:"令和元(行ツ)222",date:"2021-02-24",wareki:"令和3年2月24日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集75巻2号29頁",areas:["憲法","行政"],
+ holdings:"市が管理する都市公園内に孔子等を祀った施設を設置することを許可した上でその敷地使用料の全額を免除した行為は、憲法20条3項の禁止する宗教的活動に該当する。",
+ summary:"施設の外観や祭礼の内容から、本件施設は社寺との類似性があり宗教性を肯定できる。市が使用料を全額免除したことは、特定の宗教に対して特別の便益を提供し援助していると評価されてもやむを得ないものであり、諸般の事情を総合考慮すると、社会通念に照らして相当とされる限度を超えるとした。",
+ laws:["憲法20条1項","憲法20条3項","憲法89条","地方自治法242条の2"],tags:["政教分離","総合判断","住民訴訟","公園"]},
+{id:"c034",lid:92527,name:"性同一性障害特例法生殖不能要件違憲決定",caseNo:"令和2(ク)993",date:"2023-10-25",wareki:"令和5年10月25日",court:"最高裁判所",bench:"大法廷",kind:"決定",result:"破棄差戻",reporter:"民集77巻7号1792頁",areas:["憲法","家族"],
+ holdings:"性別の取扱いの変更の審判を受けるための要件として生殖腺がないこと又は生殖機能を永続的に欠く状態にあることを定める特例法3条1項4号は、憲法13条に違反する。",
+ summary:"自己の意思に反して身体への侵襲を受けない自由は人格的生存に関わる重要な権利として憲法13条により保障される。本件規定は、性別変更を望む者に対し生殖腺除去手術を受けることを事実上強制するもので、その制約の必要性は低減しており、制約の程度は重大である。個人の尊重の観点から、必要かつ合理的とはいえず違憲である。",
+ laws:["憲法13条","性同一性障害者の性別の取扱いの特例に関する法律3条1項4号"],tags:["人格権","身体への侵襲","性別変更","法令違憲"]},
+{id:"c035",lid:0,name:"旧優生保護法国家賠償請求訴訟",caseNo:"",date:"2024-07-03",wareki:"令和6年7月3日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"一部破棄自判",reporter:"裁判所ウェブサイト掲載",areas:["憲法","民事"],
+ holdings:"旧優生保護法の不妊手術に関する規定は憲法13条・14条1項に違反し、同法を制定した国会の立法行為は国家賠償法上違法である。国が除斥期間の経過を主張して損害賠償責任を免れることは、信義則に反し権利の濫用として許されない。",
+ summary:"特定の障害等を有する者を一方的に不良と断定し不妊手術を強制することは、個人の尊厳と人格の尊重の精神に著しく反し、立法目的自体が正当とはいえない。除斥期間について、その適用が著しく正義・公平の理念に反し到底容認できない場合には適用が制限されうるとして、従来の判例を変更した。",
+ laws:["憲法13条","憲法14条1項","国家賠償法1条1項","民法724条後段"],tags:["国家賠償","除斥期間","判例変更","立法行為"]},
+{id:"c036",lid:86600,name:"GPS捜査違法判決",caseNo:"平成28(あ)442",date:"2017-03-15",wareki:"平成29年3月15日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"刑集71巻3号13頁",areas:["刑事","憲法"],
+ holdings:"車両にGPS端末を秘かに取り付けて位置情報を検索・把握するGPS捜査は、個人のプライバシーを侵害しうるもので、令状がなければ行うことのできない強制の処分に当たる。",
+ summary:"GPS捜査は公道上のみならず個人のプライバシーが強く保護されるべき場所・空間に関わる位置情報も取得でき、個人の意思を制圧して憲法の保障する重要な法的利益を侵害する。刑訴法上の各種強制処分の令状では対応困難な問題があり、GPS捜査を導入するには立法的措置が講じられることが望ましいとした。",
+ laws:["憲法35条","刑事訴訟法197条1項"],tags:["強制処分","令状主義","プライバシー","GPS"]},
+{id:"c037",lid:38241,name:"川崎協同病院事件",caseNo:"平成19(あ)585",date:"2009-12-07",wareki:"平成21年12月7日",court:"最高裁判所",bench:"第三小法廷",kind:"決定",result:"上告棄却",reporter:"刑集63巻11号1899頁",areas:["刑事"],
+ holdings:"回復可能性や余命について的確な判断を下せる状況になく、患者の推定的意思にも基づかないで行われた気管内チューブの抜管は、法律上許容される治療中止には当たらない。",
+ summary:"被害者は昏睡状態にあったが、必要な検査が尽くされておらず余命等の判断は困難であり、家族からの要請も病状について適切な情報が伝えられた上でのものではなかった。抜管行為は殺人行為を構成するとして、殺人罪の成立が肯定された。",
+ laws:["刑法199条","刑法202条"],tags:["終末期医療","治療中止","殺人罪","推定的意思"]},
+{id:"c038",lid:51033,name:"白鳥決定",caseNo:"昭和46(し)67",date:"1975-05-20",wareki:"昭和50年5月20日",court:"最高裁判所",bench:"第一小法廷",kind:"決定",result:"特別抗告棄却",reporter:"刑集29巻5号177頁",areas:["刑事"],
+ holdings:"再審請求の要件である「無罪を言い渡すべき明らかな証拠」の判断においても、「疑わしいときは被告人の利益に」という刑事裁判の鉄則が適用される。",
+ summary:"再審開始のためには、確定判決における事実認定について合理的な疑いを抱かせ、その認定を覆すに足りる蓋然性のある証拠であれば足りる。新証拠の明白性は、新証拠のみを取り上げるのではなく、確定判決の証拠と総合的に評価して判断すべきとした。再審の門を広げた決定として知られる。",
+ laws:["刑事訴訟法435条6号"],tags:["再審","疑わしきは被告人の利益に","新証拠","明白性"]},
+{id:"c039",lid:50962,name:"川崎民商事件",caseNo:"昭和44(あ)734",date:"1972-11-22",wareki:"昭和47年11月22日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"刑集26巻9号554頁",areas:["憲法","刑事","行政"],
+ holdings:"憲法35条・38条の保障は刑事手続以外の手続にも及びうるが、旧所得税法上の質問検査は刑事責任追及を目的とするものではなく、令状なしに行われても憲法35条に違反せず、供述拒否権の告知がなくても憲法38条に違反しない。",
+ summary:"行政手続であっても、刑事責任追及のための資料収集に直接結びつく作用を一般的に有するものは、憲法35条・38条の保障の枠外にあるとはいえない。しかし所得税法の質問検査は、公益上の必要性と合理性があり、強制の程度も間接的心理的なものにとどまるため、令状によらないことが憲法に違反するものではない。",
+ laws:["憲法35条","憲法38条1項","所得税法"],tags:["行政調査","令状主義","黙秘権","質問検査"]},
+{id:"c040",lid:51825,name:"任意捜査における有形力行使事件",caseNo:"昭和50(あ)146",date:"1976-03-16",wareki:"昭和51年3月16日",court:"最高裁判所",bench:"第三小法廷",kind:"決定",result:"上告棄却",reporter:"刑集30巻2号187頁",areas:["刑事"],
+ holdings:"強制処分とは、個人の意思を制圧し、身体・住居・財産等に制約を加えて強制的に捜査目的を実現する行為など、特別の根拠規定がなければ許容されない手段をいう。任意捜査においても、有形力の行使は必要性・緊急性等を考慮し、具体的状況のもとで相当と認められる限度で許容される。",
+ summary:"酒気帯び運転の疑いで任意同行された者が呼気検査を拒んで退室しようとした際に警察官がその左手首をつかんだ行為について、強制処分には当たらず、任意捜査として許容される範囲内であるとして適法とされた。",
+ laws:["刑事訴訟法197条1項","刑法95条1項","警察官職務執行法2条"],tags:["任意捜査","強制処分","有形力","任意同行"]},
+{id:"c041",lid:0,name:"宇奈月温泉事件",caseNo:"",date:"1935-10-05",wareki:"昭和10年10月5日",court:"大審院",bench:"",kind:"判決",result:"上告棄却",reporter:"民集14巻1965頁",areas:["民事"],
+ holdings:"所有権の行使が権利者に何らの利益もなく、専ら相手方を害する目的でなされる場合は、権利の濫用として許されない。",
+ summary:"温泉の引湯管がわずかに他人の土地を通過していることを奇貨として、その土地を買い受けた者が引湯管の撤去または土地の高額買取りを求めた事案。撤去には莫大な費用と温泉経営への重大な支障が生じる一方、土地は利用価値がほとんどないことから、妨害排除請求は権利濫用に当たり許されないとした。",
+ laws:["民法1条3項","民法206条"],tags:["権利濫用","所有権","妨害排除","信義則"]},
+{id:"c042",lid:0,name:"富喜丸事件",caseNo:"",date:"1926-05-22",wareki:"大正15年5月22日",court:"大審院",bench:"連合部",kind:"判決",result:"破棄差戻",reporter:"民集5巻386頁",areas:["民事"],
+ holdings:"不法行為による損害賠償の範囲についても民法416条の規定が類推適用され、通常生ずべき損害のほか、特別の事情により生じた損害は当事者がその事情を予見し又は予見しえた場合に賠償の対象となる。",
+ summary:"船舶の衝突事故によって沈没した船の所有者が、事故後の船価の騰貴を前提とする損害の賠償を求めた事案。物の滅失による損害は原則として滅失当時の交換価格であるが、その後の価格騰貴による損害は、加害者が騰貴を予見しえた特別事情の損害として賠償の対象となりうるとした。",
+ laws:["民法416条","民法709条"],tags:["損害賠償の範囲","相当因果関係","予見可能性","中間最高価格"]},
+{id:"c043",lid:0,name:"大阪アルカリ事件",caseNo:"",date:"1916-12-22",wareki:"大正5年12月22日",court:"大審院",bench:"",kind:"判決",result:"破棄差戻",reporter:"民録22輯2474頁",areas:["民事"],
+ holdings:"化学工業に従事する会社が、事業の性質に従い相当な設備を施した以上、その事業から生じた損害について過失があるとはいえない。",
+ summary:"工場から排出された亜硫酸ガス等により農作物被害を受けた農民が損害賠償を求めた事案。損害の予防に相当な設備を施していたかどうかを審理することなく過失を認めた原判決を破棄した。過失の判断において企業の設備の相当性を基準とする判決として、公害事件における過失論の出発点となった。",
+ laws:["民法709条"],tags:["過失","公害","相当な設備","不法行為"]},
+{id:"c044",lid:54204,name:"東大ルンバール事件",caseNo:"昭和48(オ)517",date:"1975-10-24",wareki:"昭和50年10月24日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"破棄差戻",reporter:"民集29巻9号1417頁",areas:["民事"],
+ holdings:"訴訟上の因果関係の立証は、一点の疑義も許されない自然科学的証明ではなく、経験則に照らして全証拠を総合検討し、特定の事実が特定の結果発生を招来した関係を是認しうる高度の蓋然性を証明することで足りる。",
+ summary:"化膿性髄膜炎で入院中の幼児に対する腰椎穿刺（ルンバール）の実施直後に発作が生じ後遺症が残った事案。施術と発作・後遺症との間の因果関係について、時間的接着や病状の推移などの事情を総合すると高度の蓋然性が認められるとし、因果関係を否定した原判決を破棄した。",
+ laws:["民法709条","民事訴訟法247条"],tags:["因果関係","高度の蓋然性","医療過誤","証明度"]},
+{id:"c045",lid:81506,name:"更新料条項の有効性",caseNo:"平成22(オ)863",date:"2011-07-15",wareki:"平成23年7月15日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"破棄自判",reporter:"民集65巻5号2269頁",areas:["民事"],
+ holdings:"賃貸借契約書に一義的かつ具体的に記載された更新料条項は、更新料の額が賃料の額、賃貸借契約が更新される期間等に照らし高額に過ぎるなどの特段の事情がない限り、消費者契約法10条により無効とはいえない。",
+ summary:"更新料は、賃料の補充ないし前払い、契約継続の対価等の趣旨を含む複合的な性質を有し、一概に不合理とはいえない。更新料条項が消費者である賃借人の利益を一方的に害するものとはいえず、本件（1年更新で賃料2か月分の更新料）は無効ではないとした。",
+ laws:["消費者契約法10条","民法1条2項","借地借家法"],tags:["更新料","消費者契約","賃貸借","不当条項"]},
+{id:"c046",lid:81180,name:"敷引特約の有効性",caseNo:"平成21(受)1679",date:"2011-03-24",wareki:"平成23年3月24日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"上告棄却",reporter:"民集65巻2号903頁",areas:["民事"],
+ holdings:"賃貸借契約における敷引特約は、敷引金の額が補修費用として通常想定される額、賃料の額、礼金等の有無等に照らして高額に過ぎると評価される場合を除き、消費者契約法10条により無効とはいえない。",
+ summary:"敷引金は通常損耗等の補修費用を賃借人に負担させる趣旨を含み、契約書に明記され賃借人が明確に認識した上で契約した場合、通常損耗の補修費用が賃料に含まれていないことを前提として合意されたものといえる。敷引金の額が高額に過ぎるとはいえない本件では、特約は有効とされた。",
+ laws:["消費者契約法10条","民法1条2項"],tags:["敷引","消費者契約","賃貸借","原状回復"]},
+{id:"c047",lid:86354,name:"預貯金債権の遺産分割決定",caseNo:"平成27(許)11",date:"2016-12-19",wareki:"平成28年12月19日",court:"最高裁判所",bench:"大法廷",kind:"決定",result:"破棄差戻",reporter:"民集70巻8号2121頁",areas:["民事","家族"],
+ holdings:"共同相続された普通預金債権、通常貯金債権及び定期貯金債権は、いずれも相続開始と同時に当然に相続分に応じて分割されることはなく、遺産分割の対象となる。",
+ summary:"預貯金は現金に近い性質を持ち、具体的な遺産分割の方法を定めるに当たっての調整に資する財産である。預貯金債権が相続開始と同時に当然分割されるとしていた従来の判例を変更し、遺産分割において預貯金を含めて共同相続人間の実質的公平を図ることを可能にした。",
+ laws:["民法898条","民法907条","民法427条"],tags:["遺産分割","預貯金","判例変更","相続"]},
+{id:"c048",lid:86482,name:"検索結果削除請求事件",caseNo:"平成28(許)45",date:"2017-01-31",wareki:"平成29年1月31日",court:"最高裁判所",bench:"第三小法廷",kind:"決定",result:"抗告棄却",reporter:"民集71巻1号63頁",areas:["民事","憲法"],
+ holdings:"検索事業者に対し検索結果の削除を求めることができるのは、当該事実を公表されない法的利益と当該URL等を検索結果として提供する理由に関する諸事情を比較衡量し、前者が優越することが明らかな場合である。",
+ summary:"検索結果の提供は検索事業者自身による表現行為の側面を有し、インターネット上の情報流通の基盤として大きな役割を果たしている。過去の逮捕歴に関する検索結果の削除請求について、事実の性質・内容、被害の程度、社会的地位、記事の目的・意義等を考慮し、公表されない利益が優越することが明らかとはいえないとして削除を認めなかった。",
+ laws:["民法709条","憲法13条","憲法21条"],tags:["忘れられる権利","プライバシー","検索エンジン","比較衡量"]},
+{id:"c049",lid:54992,name:"秋北バス事件",caseNo:"昭和40(オ)145",date:"1968-12-25",wareki:"昭和43年12月25日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集22巻13号3459頁",areas:["労働"],
+ holdings:"就業規則は、その内容が合理的なものである限り、個々の労働者が同意しているか否かを問わず、その適用を受ける。新たに定年制を設ける就業規則の変更も、それが合理的なものである限り、これに同意しない労働者にも適用される。",
+ summary:"就業規則は経営主体が労働条件を統一的・画一的に決定するために定めるもので、法的規範としての性質を有する。就業規則の不利益変更は原則として個々の労働者の同意なしに許されないが、当該条項が合理的なものである限り、反対する労働者も拘束される。55歳定年制の新設は合理的とされた。",
+ laws:["労働基準法89条","労働基準法93条","労働基準法90条"],tags:["就業規則","不利益変更","定年制","合理性"]},
+{id:"c050",lid:51922,name:"日本食塩製造事件",caseNo:"昭和43(オ)499",date:"1975-04-25",wareki:"昭和50年4月25日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"破棄差戻",reporter:"民集29巻4号456頁",areas:["労働"],
+ holdings:"使用者の解雇権の行使も、それが客観的に合理的な理由を欠き社会通念上相当として是認することができない場合には、権利の濫用として無効となる。",
+ summary:"ユニオン・ショップ協定に基づく解雇について、労働組合からの除名が無効である場合には、使用者が協定に基づいてした解雇は解雇権の濫用として無効になるとした。解雇権濫用法理を明示した判決であり、現在の労働契約法16条の基礎となった。",
+ laws:["民法1条3項","労働組合法7条","労働契約法16条"],tags:["解雇権濫用","ユニオン・ショップ","除名","解雇"]},
+{id:"c051",lid:74499,name:"高知放送事件",caseNo:"昭和49(オ)165",date:"1977-01-31",wareki:"昭和52年1月31日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"上告棄却",reporter:"労判268号17頁",areas:["労働"],
+ holdings:"就業規則所定の普通解雇事由に該当する事実がある場合でも、解雇が著しく不合理であり社会通念上相当なものとして是認できないときは、権利の濫用として無効となる。",
+ summary:"アナウンサーが宿直勤務中に寝過ごし、2週間に2回ラジオニュースを放送できなかったことを理由とする解雇について、悪意・故意によるものではなく、事故防止の体制も十分でなかったこと、過去に同種事故で解雇された例がないことなどから、解雇は苛酷にすぎ社会通念上相当でないとして無効とされた。",
+ laws:["民法1条3項","労働契約法16条"],tags:["解雇権濫用","普通解雇","社会的相当性","放送事故"]},
+{id:"c052",lid:54173,name:"東芝柳町工場事件",caseNo:"昭和45(オ)1175",date:"1974-07-22",wareki:"昭和49年7月22日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"上告棄却",reporter:"民集28巻5号927頁",areas:["労働"],
+ holdings:"期間2か月の労働契約が反復更新され、期間の定めのない契約と実質的に異ならない状態で存在していた場合、雇止めの意思表示には解雇に関する法理が類推適用される。",
+ summary:"臨時工として5回から23回にわたり契約が更新されてきた労働者に対する雇止めについて、契約の更新が形式的に反復されており当事者双方も長期継続を期待していた場合、雇止めは実質的に解雇の意思表示に当たるとし、解雇権濫用法理の類推により、雇止めの効力を判断すべきとした。",
+ laws:["民法1条3項","民法629条","労働契約法19条"],tags:["雇止め","有期契約","解雇法理の類推","臨時工"]},
+{id:"c053",lid:52138,name:"大日本印刷事件",caseNo:"昭和52(オ)94",date:"1979-07-20",wareki:"昭和54年7月20日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"上告棄却",reporter:"民集33巻5号582頁",areas:["労働"],
+ holdings:"採用内定通知により、就労の始期を大学卒業直後とし、それまでの間に内定取消事由が生じた場合には解約できる旨の解約権留保付労働契約が成立する。内定取消しは、採用内定当時知ることができず知ることが期待できないような事実で、客観的に合理的で社会通念上相当と是認できるものに限られる。",
+ summary:"大学卒業予定者に対し「グルーミー（陰気）な印象」を理由に採用内定を取り消した事案。その印象は内定当時から会社が把握していたものであり、内定取消事由に当たらないとして取消しを無効とした。採用内定の法的性質を明らかにした判決。",
+ laws:["民法1条3項","民法627条","労働契約法16条"],tags:["採用内定","内定取消し","解約権留保","労働契約の成立"]},
+{id:"c054",lid:62925,name:"東亜ペイント事件",caseNo:"昭和59(オ)1318",date:"1986-07-14",wareki:"昭和61年7月14日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"破棄差戻",reporter:"労判477号6頁",areas:["労働"],
+ holdings:"転勤命令は、業務上の必要性が存しない場合、不当な動機・目的をもってなされた場合、労働者に対し通常甘受すべき程度を著しく超える不利益を負わせる場合など特段の事情がない限り、権利の濫用にならない。",
+ summary:"就業規則に転勤条項があり労働協約にも同旨の規定がある場合、使用者は個別の同意なしに転勤を命じることができる。業務上の必要性は余人をもって代えがたいという高度のものである必要はなく、企業の合理的運営に寄与する点があれば足りる。母親と妻子との別居という不利益は通常甘受すべき程度のものとされた。",
+ laws:["民法1条3項","労働契約法3条5号"],tags:["配転命令","転勤","権利濫用","業務上の必要性"]},
+{id:"c055",lid:62868,name:"日立メディコ事件",caseNo:"昭和56(オ)225",date:"1986-12-04",wareki:"昭和61年12月4日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"上告棄却",reporter:"労判486号6頁",areas:["労働"],
+ holdings:"臨時員の雇止めに解雇の法理が類推適用される場合であっても、終身雇用の期待のもとに期間の定めのない契約を締結している正社員の整理解雇とは合理的な差異があり、独立採算制の事業所において人員削減が必要な場合、臨時員の雇止めを先行させることは不合理ではない。",
+ summary:"5回にわたり契約が更新された臨時員に対する雇止めについて、契約更新への期待がある程度あったとして解雇法理の類推適用を認めつつ、事業所の業績悪化に伴う人員削減の必要性と、正社員の希望退職募集を行わずに臨時員を雇止めした点も不合理とはいえないとして、雇止めを有効とした。",
+ laws:["民法1条3項","労働契約法19条"],tags:["雇止め","整理解雇","有期契約","臨時員"]},
+{id:"c056",lid:62769,name:"片山組事件",caseNo:"平成7(オ)1230",date:"1998-04-09",wareki:"平成10年4月9日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"破棄差戻",reporter:"労判736号15頁",areas:["労働"],
+ holdings:"労働者が職種や業務内容を特定せずに雇用された場合、現に就業を命じられた特定の業務について労務の提供が十全にはできないとしても、その能力・経験・地位、企業の規模等に照らして配置される現実的可能性がある他の業務について労務の提供ができ、かつその提供を申し出ているならば、なお債務の本旨に従った履行の提供があるといえる。",
+ summary:"病気により現場監督業務に就けないと申し出た労働者に対して自宅治療命令を発し賃金を支給しなかった事案。事務作業であれば就労可能であり、その旨申し出ていたのであるから、賃金請求権を失わないとして、賃金請求を認めなかった原判決を破棄した。",
+ laws:["民法536条2項","民法493条"],tags:["賃金請求権","労務提供","私傷病","債務の本旨"]},
+{id:"c057",lid:52222,name:"電通事件",caseNo:"平成10(オ)217・218",date:"2000-03-24",wareki:"平成12年3月24日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"一部破棄差戻",reporter:"民集54巻3号1155頁",areas:["労働","民事"],
+ holdings:"使用者は、業務の遂行に伴う疲労や心理的負荷等が過度に蓄積して労働者の心身の健康を損なうことがないよう注意する義務を負う。長時間労働によりうつ病に罹患し自殺した労働者について会社の損害賠償責任が認められ、労働者の性格等を理由とする過失相殺は許されない。",
+ summary:"入社後の恒常的な長時間労働と過重な業務によって労働者がうつ病に罹患し自殺した事案。上司が労働者の健康状態の悪化を認識しながら業務軽減等の措置を講じなかったことに過失があるとして、会社の使用者責任を認めた。労働者の性格が通常想定される範囲を外れるものでない限り、過失相殺の斟酌は許されないとした。",
+ laws:["民法415条","民法709条","民法715条","民法722条2項","労働安全衛生法"],tags:["安全配慮義務","過労自殺","過失相殺","長時間労働"]},
+{id:"c058",lid:87785,name:"長澤運輸事件",caseNo:"平成29(受)442",date:"2018-06-01",wareki:"平成30年6月1日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"一部破棄差戻",reporter:"民集72巻2号202頁",areas:["労働"],
+ holdings:"定年退職後に再雇用された有期契約労働者と正社員との労働条件の相違が労働契約法20条にいう不合理と認められるものに当たるかは、賃金の総額を比較するのみでなく、賃金項目ごとにその趣旨を個別に考慮して判断すべきである。",
+ summary:"定年後再雇用の嘱託乗務員と正社員との賃金格差について、定年後再雇用であることは労働契約法20条の「その他の事情」として考慮できる。能率給・職務給の不支給や住宅手当・家族手当の不支給は不合理とはいえないが、精勤手当の不支給と、それに連動する超勤手当の計算基礎からの除外は不合理とされた。",
+ laws:["労働契約法20条","パートタイム・有期雇用労働法8条"],tags:["同一労働同一賃金","定年後再雇用","有期契約","不合理な待遇差"]},
+{id:"c059",lid:87784,name:"ハマキョウレックス事件",caseNo:"平成28(受)2099・2100",date:"2018-06-01",wareki:"平成30年6月1日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"一部破棄自判",reporter:"民集72巻2号88頁",areas:["労働"],
+ holdings:"労働契約法20条は有期契約労働者と無期契約労働者との労働条件の相違が不合理と認められるものであることを禁止する規定であり、同条違反の労働条件の定めは無効となるが、有期契約労働者の労働条件が無期契約労働者と同一になるものではない。",
+ summary:"契約社員のトラック運転手と正社員との間の各手当の相違について、無事故手当・作業手当・給食手当・通勤手当・皆勤手当の不支給は不合理とされ、住宅手当の不支給は転居を伴う配転の有無の違いから不合理ではないとされた。手当ごとにその趣旨を個別に検討する枠組みを示した判決。",
+ laws:["労働契約法20条","パートタイム・有期雇用労働法8条"],tags:["同一労働同一賃金","有期契約","手当","不合理な待遇差"]},
+{id:"c060",lid:52790,name:"ボールスプライン軸受事件",caseNo:"平成6(オ)1083",date:"1998-02-24",wareki:"平成10年2月24日",court:"最高裁判所",bench:"第三小法廷",kind:"判決",result:"破棄差戻",reporter:"民集52巻1号113頁",areas:["知的財産"],
+ holdings:"特許請求の範囲に記載された構成中に対象製品と異なる部分がある場合でも、その部分が特許発明の本質的部分ではなく、置き換えても目的を達成でき同一の作用効果を奏し、当業者が製造時点で容易に想到でき、対象製品が公知技術と同一又は容易推考でなく、出願手続で意識的に除外されたものでない場合、均等として技術的範囲に属する。",
+ summary:"特許権侵害訴訟における均等論の成立要件（5要件）を最高裁として初めて明示した判決。特許出願時に将来のあらゆる侵害態様を予想して明細書を記載することは困難であり、些細な置換によって侵害を免れることを認めると発明の保護が不十分になるとして、均等侵害を肯定する余地を認めた。",
+ laws:["特許法70条","特許法100条"],tags:["均等論","技術的範囲","特許侵害","5要件"]},
+{id:"c061",lid:52224,name:"キルビー事件",caseNo:"平成10(オ)364",date:"2000-04-11",wareki:"平成12年4月11日",court:"最高裁判所",bench:"第三小法廷",kind:"判決",result:"上告棄却",reporter:"民集54巻4号1368頁",areas:["知的財産"],
+ holdings:"特許に無効理由が存在することが明らかであるときは、その特許権に基づく差止め・損害賠償等の請求は、特段の事情がない限り、権利の濫用に当たり許されない。",
+ summary:"特許庁の無効審決を経なくても、侵害訴訟を審理する裁判所は特許に無効理由が存在することが明らかであるか否かを判断できるとした。半導体集積回路（キルビー特許）に関する事案。この判決を受けて特許法104条の3（特許権者の権利行使の制限）が新設された。",
+ laws:["特許法104条の3","特許法123条","民法1条3項"],tags:["権利濫用","無効の抗弁","特許侵害","特許法104条の3"]},
+{id:"c062",lid:9356,name:"一太郎事件",caseNo:"平成17(ネ)10040",date:"2005-09-30",wareki:"平成17年9月30日",court:"知的財産高等裁判所",bench:"特別部",kind:"判決",result:"原判決取消",reporter:"判時1904号47頁",areas:["知的財産"],
+ holdings:"ワープロソフトのヘルプ機能に関する特許について、出願前の引用発明から当業者が容易に発明できたものであり無効理由が存在することが明らかであるとして、特許権に基づく差止請求は権利の濫用に当たり許されない。",
+ summary:"アイコンの機能説明を表示する特許を侵害するとして、ワープロソフト「一太郎」の製造販売差止めと廃棄が命じられた第一審判決を、知財高裁が大合議で取り消した事案。ソフトウェア関連発明の進歩性判断と、間接侵害の成否が争点となり、社会的にも注目された。",
+ laws:["特許法29条2項","特許法101条","特許法104条の3"],tags:["進歩性","権利濫用","間接侵害","ソフトウェア特許"]},
+{id:"c063",lid:81012,name:"まねきTV事件",caseNo:"平成21(受)653",date:"2011-01-18",wareki:"平成23年1月18日",court:"最高裁判所",bench:"第三小法廷",kind:"判決",result:"破棄差戻",reporter:"民集65巻1号121頁",areas:["知的財産"],
+ holdings:"放送番組を利用者の求めに応じて自動的に送信する機器（ベースステーション）を管理・設置し、これに放送を入力している事業者は、送信の主体として自動公衆送信を行っているものであり、送信可能化権及び公衆送信権を侵害する。",
+ summary:"利用者が所有する機器を事業者が預かり、テレビ放送を利用者のインターネット端末に転送するサービスについて、各機器は1対1の送信であっても、事業者が多数の機器を管理し不特定多数の利用者に送信している以上、自動公衆送信装置に当たるとした。",
+ laws:["著作権法2条1項7号の2","著作権法2条1項9号の5","著作権法23条1項","著作権法99条の2"],tags:["公衆送信権","送信可能化","自動公衆送信","放送"]},
+{id:"c064",lid:81015,name:"ロクラクII事件",caseNo:"平成21(受)788",date:"2011-01-20",wareki:"平成23年1月20日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"破棄差戻",reporter:"民集65巻1号399頁",areas:["知的財産"],
+ holdings:"放送番組の複製機器を管理・支配し、放送を受信して複製機器に入力する者は、利用者の求めに応じて複製する場合であっても、複製の主体と認められ、複製権侵害となりうる。",
+ summary:"親機を事業者が管理し、利用者が子機から録画指示を送ってテレビ番組を視聴するサービスについて、複製の主体の判断は、複製の対象、方法、複製への関与の内容・程度等の諸要素を考慮して行うべきとした。事業者が単なる環境提供にとどまらず、放送の受信と複製機器への入力という枢要な行為を行っている場合は複製の主体とされる。",
+ laws:["著作権法21条","著作権法30条1項","著作権法98条"],tags:["複製権","利用主体","私的複製","録画サービス"]},
+{id:"c065",lid:85145,name:"プロダクト・バイ・プロセス・クレーム事件",caseNo:"平成24(受)1204",date:"2015-06-05",wareki:"平成27年6月5日",court:"最高裁判所",bench:"第二小法廷",kind:"判決",result:"破棄差戻",reporter:"民集69巻4号700頁",areas:["知的財産"],
+ holdings:"物の発明についての特許請求の範囲に物の製造方法が記載されている場合、特許発明の技術的範囲はその製造方法により製造された物と構造・特性等が同一である物として確定される。ただし、出願時に物の構造・特性を直接特定することが不可能又はおよそ実際的でない事情がない限り、明確性要件に適合しない。",
+ summary:"血圧降下剤の製造方法が請求項に記載されていた特許について、いわゆる物同一説を採用し、製造方法にかかわらず同一の物であれば技術的範囲に含まれるとした。同時に、そのようなクレームの記載が許されるのは物の特定が不可能・非実際的である場合に限られるとして、明確性要件の判断枠組みを示した。",
+ laws:["特許法36条6項2号","特許法70条1項"],tags:["プロダクト・バイ・プロセス","明確性要件","技術的範囲","物同一説"]},
+{id:"c066",lid:53255,name:"マクリーン事件",caseNo:"昭和50(行ツ)120",date:"1978-10-04",wareki:"昭和53年10月4日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"上告棄却",reporter:"民集32巻7号1223頁",areas:["憲法","行政"],
+ holdings:"外国人の在留の権利は憲法上保障されていない。外国人に対する基本的人権の保障は在留制度の枠内で与えられているにすぎず、在留期間更新の許否は法務大臣の広範な裁量に委ねられる。",
+ summary:"基本的人権の保障は権利の性質上日本国民のみを対象とするものを除き外国人にも及び、政治活動の自由も外国人の地位に鑑み相当でないものを除いて保障される。しかし在留中の政治活動を在留期間更新の際に消極的事情として斟酌することは妨げられず、更新不許可処分は裁量権の逸脱・濫用に当たらないとした。",
+ laws:["憲法22条","憲法21条","出入国管理令21条3項"],tags:["外国人の人権","在留資格","法務大臣の裁量","政治活動の自由"]},
+{id:"c067",lid:52414,name:"小田急線高架化訴訟（原告適格）",caseNo:"平成16(行ヒ)114",date:"2005-12-07",wareki:"平成17年12月7日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"民集59巻10号2645頁",areas:["行政"],
+ holdings:"都市計画事業の認可の取消訴訟において、事業地の周辺に居住し、事業に伴う騒音・振動等によって健康又は生活環境に係る著しい被害を直接的に受けるおそれのある住民は、認可の取消しを求める原告適格を有する。",
+ summary:"行政事件訴訟法9条2項に基づき、処分の根拠法令のみならず関連法令（公害対策基本法、環境影響評価条例等）の趣旨・目的、および処分において考慮されるべき利益の内容・性質を考慮して法律上の利益の有無を判断すべきとした。事業地内の不動産に権利を有する者に限定していた従来の判例を変更した。",
+ laws:["行政事件訴訟法9条","都市計画法59条","公害対策基本法"],tags:["原告適格","法律上の利益","判例変更","都市計画"]},
+{id:"c068",lid:36787,name:"浜松市土地区画整理事業計画事件",caseNo:"平成17(行ヒ)397",date:"2008-09-10",wareki:"平成20年9月10日",court:"最高裁判所",bench:"大法廷",kind:"判決",result:"破棄差戻",reporter:"民集62巻8号2029頁",areas:["行政"],
+ holdings:"市町村の施行に係る土地区画整理事業の事業計画の決定は、施行地区内の宅地所有者等の法的地位に直接的な影響を及ぼすものであり、抗告訴訟の対象となる行政処分に当たる。",
+ summary:"事業計画の決定により施行地区内の宅地所有者等は換地処分を受けるべき地位に立たされ、建築行為の制限を伴うなど法的地位に変動が生じる。換地処分後に事業計画の違法を争っても事情判決がされる可能性が高く、実効的な権利救済のためには事業計画の段階で取消訴訟を認めるべきとして、処分性を否定していた従来の判例を変更した。",
+ laws:["行政事件訴訟法3条2項","土地区画整理法52条","土地区画整理法76条"],tags:["処分性","事業計画","判例変更","実効的な権利救済"]},
+{id:"c069",lid:54276,name:"伊方原発訴訟",caseNo:"昭和60(行ツ)133",date:"1992-10-29",wareki:"平成4年10月29日",court:"最高裁判所",bench:"第一小法廷",kind:"判決",result:"上告棄却",reporter:"民集46巻7号1174頁",areas:["行政"],
+ holdings:"原子炉設置許可処分の取消訴訟における裁判所の審理・判断は、原子力委員会等の専門技術的な調査審議及び判断を基にしてされた行政庁の判断に不合理な点があるか否かという観点から行われるべきである。",
+ summary:"具体的審査基準に不合理な点があるか、または調査審議・判断の過程に看過し難い過誤・欠落があるかを審査し、これがある場合に限り許可処分は違法となる。安全審査に関する資料は行政庁側が保持しているため、行政庁が判断に不合理な点がないことを相当の根拠・資料に基づき主張立証する必要があり、これを尽くさない場合には不合理な点があることが事実上推認される。",
+ laws:["核原料物質、核燃料物質及び原子炉の規制に関する法律24条","行政事件訴訟法"],tags:["専門技術的裁量","判断過程審査","原子炉","立証責任"]},
+{id:"c070",lid:90200,name:"同性婚訴訟（札幌地裁）",caseNo:"平成31(ワ)267",date:"2021-03-17",wareki:"令和3年3月17日",court:"札幌地方裁判所",bench:"",kind:"判決",result:"請求棄却",reporter:"判時2487号3頁",areas:["憲法","家族"],
+ holdings:"同性愛者に対し、婚姻によって生じる法的効果の一部ですら享受する法的手段を提供していないことは、合理的根拠を欠く差別的取扱いとして憲法14条1項に違反する。ただし国家賠償法上の違法は認められない。",
+ summary:"性的指向は自らの意思で選択・変更できないものであり、同性愛者と異性愛者との間の区別は性別や人種と同様に慎重に検討すべきである。婚姻の法的効果を一切享受できないことは立法府の裁量権の範囲を超えるとして違憲判断を示したが、違憲であることが国会にとって明白であったとはいえないとして損害賠償請求は棄却した。同性婚をめぐる一連の訴訟で初めての違憲判断。",
+ laws:["憲法14条1項","憲法24条","民法739条","国家賠償法1条1項"],tags:["同性婚","法の下の平等","婚姻","国家賠償"]}
+];
+</script>
+<script>
+(function(){
+"use strict";
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const fmtN = n => Number(n).toLocaleString("ja-JP");
+
+// ---------- 表記の正規化（検索語と収録テキストの両方に同じ規則を適用） ----------
+const OLDMAP = {"國":"国","會":"会","條":"条","體":"体","當":"当","爲":"為","證":"証","擔":"担","辯":"弁","辨":"弁","瓣":"弁","辦":"弁","與":"与","權":"権","數":"数","處":"処","廣":"広","應":"応","來":"来","兒":"児","營":"営","歸":"帰","擧":"挙","單":"単","團":"団","彈":"弾","獨":"独","讀":"読","續":"続","變":"変","戰":"戦","淺":"浅","齊":"斉","賣":"売","壽":"寿","圖":"図","惡":"悪","壓":"圧","醫":"医","價":"価","覺":"覚","學":"学","關":"関","氣":"気","舊":"旧","檢":"検","驗":"験","險":"険","縣":"県","廳":"庁","聽":"聴","歐":"欧","勞":"労","兩":"両","禮":"礼","勵":"励","靈":"霊","爐":"炉","狀":"状","將":"将","從":"従","縱":"縦","轉":"転","傳":"伝","點":"点","燈":"灯","黨":"党","獻":"献","顯":"顕","辭":"辞","實":"実","寫":"写","釋":"釈","繼":"継","總":"総","聲":"声","經":"経","濟":"済","樣":"様","齋":"斎","齡":"齢","譽":"誉","餘":"余","豫":"予","譯":"訳","藥":"薬","樂":"楽","亂":"乱","覽":"覧","歷":"歴","曆":"暦","戀":"恋","錄":"録","灣":"湾","萬":"万","區":"区","驅":"駆","擇":"択","澤":"沢","竊":"窃","拂":"払","佛":"仏","麥":"麦","晝":"昼","蟲":"虫","鐵":"鉄","龍":"竜","效":"効","卽":"即","槪":"概","內":"内","剩":"剰","粹":"粋","壞":"壊","懷":"懐","廢":"廃","拜":"拝","發":"発","髮":"髪","濱":"浜","敍":"叙","兇":"凶","恆":"恒","勳":"勲","爭":"争","壯":"壮","莊":"荘","裝":"装","藏":"蔵","臟":"臓","屬":"属","囑":"嘱","觸":"触","寢":"寝","眞":"真","盡":"尽","隨":"随","髓":"髄","樞":"枢","畫":"画","齒":"歯","濕":"湿","肅":"粛","稱":"称","乘":"乗","淨":"浄","疊":"畳","讓":"譲","釀":"醸","觀":"観","歡":"歓","勸":"勧","寬":"寛","僞":"偽","戲":"戯","犧":"犠","擊":"撃","徑":"径","惠":"恵","揭":"掲","鷄":"鶏","藝":"芸","缺":"欠","嚴":"厳","鑛":"鉱","衞":"衛","圍":"囲","隱":"隠","榮":"栄","驛":"駅","橫":"横","殼":"殻","嶽":"岳","渴":"渇","寶":"宝","豐":"豊","拔":"抜","搜":"捜","收":"収","敎":"教","晚":"晩","殘":"残","每":"毎","淚":"涙","稅":"税","緖":"緒","莖":"茎","虛":"虚","謠":"謡","遲":"遅","郞":"郎","鄕":"郷","錢":"銭","鎭":"鎮","陷":"陥","靜":"静","顏":"顔","飮":"飲","鬪":"闘","黃":"黄","黑":"黒","默":"黙","龜":"亀","靑":"青","戶":"戸","步":"歩","卷":"巻","專":"専","尙":"尚","德":"徳","悅":"悦","惱":"悩","愼":"慎","戾":"戻","揷":"挿","搖":"揺","攝":"摂","曾":"曽","樓":"楼","溫":"温","滿":"満","燒":"焼","獸":"獣","祕":"秘","祿":"禄","稻":"稲","穗":"穂","竝":"並","絲":"糸","繩":"縄","纖":"繊","聯":"連","腦":"脳","臺":"台","舍":"舎","蘆":"芦","蠶":"蚕","遙":"遥","醉":"酔","鑄":"鋳","雜":"雑","鹽":"塩","據":"拠","瀆":"涜","弃":"棄","壹":"壱","貳":"弐","參":"参","决":"決","况":"況","噐":"器","寃":"冤","歲":"歳","淸":"清","卻":"却","禪":"禅","繫":"繋","眾":"衆","澁":"渋","涉":"渉","囘":"回","罸":"罰","冐":"冒","壻":"婿"};
+const RE_OLD = new RegExp("[" + Object.keys(OLDMAP).join("") + "]", "g"), RE_OLD_T = new RegExp("[" + Object.keys(OLDMAP).join("") + "]");
+const KDIG = { "〇": 0, "零": 0, "一": 1, "壱": 1, "二": 2, "弐": 2, "三": 3, "参": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9 };
+const KUNIT = { "十": 10, "拾": 10, "百": 100, "千": 1000 };
+function kanji2num(s){
+  if (!/[十拾百千万]/.test(s)) { let o = ""; for (const ch of s) { if (!(ch in KDIG)) return null; o += KDIG[ch]; } return o; }
+  let total = 0, sec = 0, num = -1;
+  for (const ch of s) {
+    if (ch in KDIG) num = KDIG[ch];
+    else if (ch in KUNIT) { sec += (num < 0 ? 1 : num) * KUNIT[ch]; num = -1; }
+    else if (ch === "万") { total += ((sec + (num < 0 ? 0 : num)) || 1) * 10000; sec = 0; num = -1; }
+    else return null;
+  }
+  return String(total + sec + (num < 0 ? 0 : num));
+}
+const KN = "[〇零一壱二弐三参四五六七八九十拾百千万]+";
+const RE_KN_T = /[〇零一壱二弐三参四五六七八九十拾百千万]/;
+const RE_KN1 = new RegExp("第(" + KN + ")", "g");
+const RE_KN2 = new RegExp("(" + KN + ")(?=[条項号年月日巻頁編章節款目審級回件名人割倍円歳個株通筆台枚度期段種類点])", "g");
+const RE_KN3 = new RegExp("([条項号])の(" + KN + ")", "g");
+function knum(s){
+  if (!RE_KN_T.test(s)) return s;
+  return s.replace(RE_KN1, (m, a) => { const n = kanji2num(a); return n === null ? m : "第" + n; })
+          .replace(RE_KN2, m => { const n = kanji2num(m); return n === null ? m : n; })
+          .replace(RE_KN3, (m, c, a) => { const n = kanji2num(a); return n === null ? m : c + "の" + n; });
+}
+function norm(s){
+  let t = (s || "").normalize("NFKC").toLowerCase();
+  if (RE_OLD_T.test(t)) t = t.replace(RE_OLD, ch => OLDMAP[ch]);
+  return knum(t);
+}
+// 法令の略称（どちらの表記でも探す）
+const SYN = [["刑訴法","刑事訴訟法"],["民訴法","民事訴訟法"],["民執法","民事執行法"],["民保法","民事保全法"],["労基法","労働基準法"],["労契法","労働契約法"],["労組法","労働組合法"],["独禁法","独占禁止法"],["行訴法","行政事件訴訟法"],["行手法","行政手続法"],["行審法","行政不服審査法"],["国賠法","国家賠償法"],["地自法","地方自治法"],["会更法","会社更生法"],["民再法","民事再生法"],["不競法","不正競争防止法"],["消契法","消費者契約法"],["景表法","景品表示法"],["個情法","個人情報保護法"],["入管法","出入国管理及び難民認定法"],["道交法","道路交通法"],["銃刀法","銃砲刀剣類所持等取締法"],["公選法","公職選挙法"],["金商法","金融商品取引法"],["税通法","国税通則法"],["地税法","地方税法"],["特商法","特定商取引に関する法律"],["割販法","割賦販売法"],["均等法","男女雇用機会均等法"],["派遣法","労働者派遣法"],["安衛法","労働安全衛生法"],["労災保険法","労働者災害補償保険法"],["健保法","健康保険法"],["国年法","国民年金法"],["厚年法","厚生年金保険法"],["生保法","生活保護法"],["児福法","児童福祉法"],["日本国憲法","憲法"],["覚せい剤","覚醒剤"],["麻薬取締法","麻薬及び向精神薬取締法"],["売防法","売春防止法"],["軽犯法","軽犯罪法"],["建基法","建築基準法"],["都計法","都市計画法"],["区画整理法","土地区画整理法"],["収用法","土地収用法"],["所税法","所得税法"],["法税法","法人税法"],["消税法","消費税法"],["相税法","相続税法"],["税徴法","国税徴収法"],["借地法","借地借家法"],["民訴規","民事訴訟規則"],["刑訴規","刑事訴訟規則"]].map(([a, b]) => [norm(a), norm(b)]);
+
+const CATS = [
+  { bit: 1, label: "最高裁判例集", short: "最高裁", detail: 2 },
+  { bit: 2, label: "高裁判例集", short: "高裁", detail: 3 },
+  { bit: 4, label: "下級裁裁判例", short: "下級裁", detail: 4 },
+  { bit: 8, label: "行政事件裁判例", short: "行政", detail: 5 },
+  { bit: 16, label: "労働事件裁判例", short: "労働", detail: 6 },
+  { bit: 32, label: "知的財産裁判例", short: "知財", detail: 7 },
+  { bit: 64, label: "解説つき", short: "解説", detail: 0, ed: true }
+];
+const ED_BIT = 64;
+const AREAS = [{ bit: 1, label: "民事" }, { bit: 2, label: "刑事" }, { bit: 4, label: "行政" }, { bit: 8, label: "労働" }, { bit: 16, label: "知的財産" }, { bit: 32, label: "家事" }, { bit: 64, label: "憲法" }, { bit: 128, label: "少年" }];
+const AREA_BIT = Object.fromEntries(AREAS.map(a => [a.label, a.bit]));
+const FILES = ["data/cases-a.txt", "data/cases-b.txt", "data/cases-c.txt"]; // gzip を base64 で格納
+const PAGE = 50;
+
+// ---------- 和暦 ----------
+function wareki(iso){
+  if (!iso) return "";
+  const y = +iso.slice(0, 4), m = +iso.slice(5, 7), d = +iso.slice(8, 10);
+  let era, n;
+  if (iso >= "2019-05-01") { era = "令和"; n = y - 2018; }
+  else if (iso >= "1989-01-08") { era = "平成"; n = y - 1988; }
+  else if (iso >= "1926-12-25") { era = "昭和"; n = y - 1925; }
+  else if (iso >= "1912-07-30") { era = "大正"; n = y - 1911; }
+  else { era = "明治"; n = y - 1867; }
+  return `${era}${n === 1 ? "元" : n}年${m}月${d}日`;
+}
+function courtGroup(c){
+  if (c.includes("最高裁判所大法廷")) return "最高裁大法廷";
+  if (c.includes("最高裁判所")) return "最高裁小法廷";
+  if (c.includes("高等裁判所")) return "高等裁判所";
+  if (c.includes("地方裁判所")) return "地方裁判所";
+  if (c.includes("家庭裁判所")) return "家庭裁判所";
+  if (c.includes("簡易裁判所")) return "簡易裁判所";
+  if (c.includes("大審院")) return "大審院";
+  return "その他";
+}
+// 裁判所名から部名を除いたキー（支部・法廷は残す）
+function courtKey(c){
+  c = (c || "").replace(/\s+/g, "");
+  let m = c.match(/^最高裁判所(大法廷|第[一二三]小法廷)?/); if (m) return m[0];
+  m = c.match(/^(.*?裁判所)(.*?支部)?/); return m ? m[1] + (m[2] || "") : c;
+}
+function shortCite(r){
+  const k = r.kind === "決定" ? "決" : "判";
+  const c = r.court || "";
+  if (c.includes("最高裁判所大法廷")) return "最大" + k;
+  if (c.includes("最高裁判所")) return "最" + k;
+  if (c.includes("大審院")) return (c.includes("連合") ? "大連" : "大") + k;
+  if (c.includes("知的財産高等裁判所")) return "知財高" + k;
+  const m = c.match(/^(.+?)(高等|地方|家庭|簡易)裁判所/);
+  if (m) return m[1] + { 高等: "高", 地方: "地", 家庭: "家", 簡易: "簡" }[m[2]] + k;
+  return c + k;
+}
+const catLabels = mask => CATS.filter(c => (mask & c.bit) && !c.ed).map(c => c.short);
+const areaLabels = mask => AREAS.filter(a => mask & a.bit).map(a => a.label);
+function detailUrl(r){ if (typeof r.id !== "number") return ""; const c = CATS.find(c => (r.cat & c.bit) && c.detail); return c ? `https://www.courts.go.jp/app/hanrei_jp/detail${c.detail}?id=${r.id}` : ""; }
+function pdfUrl(r){ if (typeof r.id !== "number") return ""; const s = String(r.id).padStart(6, "0"); return `https://www.courts.go.jp/app/files/hanrei_jp/${s.slice(-3)}/${s}_hanrei.pdf`; }
+// 事件番号の符号から分野を推定（民事＝カタカナ、刑事＝ひらがな、行政＝「行」、家事＝「家」）
+function areaMask(r){
+  let m = 0;
+  const sm = (r.num || "").match(/\(([^)]+)\)/); const sym = sm ? sm[1] : "";
+  if (sym) {
+    if (/^行/.test(sym)) m |= 4;
+    else if (/^家/.test(sym) || sym === "タ" || /^人/.test(sym)) m |= 32;
+    else if (/^少/.test(sym)) m |= 128;
+    else if (/^[ぁ-ん]/.test(sym)) m |= 2;
+    else if (/^[ァ-ヶ]/.test(sym) || /^(受|許)/.test(sym)) m |= 1;
+  }
+  if (r.cat & 8) m |= 4; if (r.cat & 16) m |= 8; if (r.cat & 32) m |= 16;
+  if (r.field === "労働") m |= 8; if (r.field === "行政") m |= 4;
+  if (r.law && /憲法/.test(r.law)) m |= 64;
+  if (r.ed) r.ed.areas.forEach(a => { const b = AREA_BIT[a === "家族" ? "家事" : a]; if (b) m |= b; });
+  return m;
+}
+
+// ---------- データ ----------
+const ALL = []; const byId = new Map(); const byNum = new Map(); const byONum = new Map();
+const EDIT = new Map(); CASES.forEach(c => { if (c.lid) EDIT.set(c.lid, c); });
+const SEGW = [6, 8, 1, 3, 2, 3, 1, 1, 5]; // name, num, court, gist, cgist, law, rep, ex, ed
+function index(r){
+  const segs = [r.name, r.num, r.court, r.gist, r.cgist, r.law, r.rep, r.ex, r.ed ? r.ed.name + " " + r.ed.tags.join(" ") + " " + r.ed.summary + " " + r.ed.laws.join(" ") : ""];
+  const b = []; let s = "";
+  for (let i = 0; i < segs.length; i++) { if (i) s += "\u0001"; b.push(s.length); s += norm(segs[i]); }
+  r.hay = s; r.b = b;
+  r.ck = courtKey(r.court); r.ckn = norm(r.ck); r.am = areaMask(r);
+  if (r.num) { const k = norm(r.num); let l = byNum.get(k); if (!l) byNum.set(k, l = []); l.push(r); }
+  if (r.onum) { const k = norm(r.onum); let l = byONum.get(k); if (!l) byONum.set(k, l = []); l.push(r); }
+}
+function makeRec(a){
+  const r = { id: a[0], cat: a[1], num: a[2], name: a[3], court: a[4], date: a[5], kind: a[6], result: a[7], gist: a[8], cgist: a[9], law: a[10], rep: a[11], ocourt: a[12], onum: a[13], odate: a[14], right: a[15], ltype: a[16], field: a[17], ex: a[18], hastext: a[19], ed: null, year: +a[5].slice(0, 4), cg: courtGroup(a[4]), hay: "", b: null, ck: "", ckn: "", am: 0 };
+  const e = EDIT.get(r.id); if (e) { r.ed = e; r.cat |= ED_BIT; }
+  return r;
+}
+let edSeq = 0;
+function makeEditorialRec(c){
+  return { id: "e" + (++edSeq), cat: ED_BIT, num: c.caseNo, name: c.name, court: c.court + (c.bench ? c.bench : ""), date: c.date, kind: c.kind, result: c.result, gist: c.holdings, cgist: "", law: c.laws.join("，"), rep: c.reporter, ocourt: "", onum: "", odate: "", right: "", ltype: "", field: "", ex: "", hastext: 0, ed: c, year: +c.date.slice(0, 4), cg: courtGroup(c.court), hay: "", b: null, ck: "", ckn: "", am: 0 };
+}
+const load = { total: 65468, done: 0, files: 0, finished: false, failed: false, reason: "" };
+const loadbar = $("#loadbar"), loadfill = $("#loadfill"), loadtext = $("#loadtext");
+function setLoad(){
+  const pct = load.finished ? 100 : Math.min(99, Math.round(load.done / load.total * 100));
+  loadfill.style.width = pct + "%";
+  if (load.failed) {
+    loadbar.classList.add("err");
+    if (load.reason === "nogzip") loadtext.textContent = "お使いのブラウザは対応していません（Chrome 80以降・Safari 16.4以降・Firefox 113以降・Edge で開いてください）。";
+    else if (load.reason === "file") loadtext.textContent = "HTMLファイルを直接開いているためデータを読み込めません。単一ファイル版（hanrei-lens-standalone.html）を使うか、Webサーバー経由で開いてください。";
+    else loadtext.textContent = load.done ? `一部のデータを読み込めませんでした（${fmtN(load.done)} 件で検索できます）` : "裁判例データを読み込めませんでした。ページを再読み込みしてください。";
+    return;
+  }
+  if (load.finished) { loadbar.classList.add("done"); loadtext.textContent = `${fmtN(ALL.length)} 件の裁判例を読み込みました`; setTimeout(() => { loadbar.hidden = true; }, 2500); return; }
+  loadtext.textContent = `裁判例データを読み込んでいます… ${fmtN(load.done)} / ${fmtN(load.total)} 件`;
+}
+function b64ToRows(b64){
+  const bin = atob(b64.replace(/\s+/g, "")); const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text().then(t => JSON.parse(t));
+}
+async function fetchRows(url, idx){
+  if (typeof DecompressionStream !== "function") throw new Error("nogzip");
+  const inline = document.getElementById("hanrei-data-" + "abc"[idx]);
+  if (inline) { const t = inline.textContent; inline.textContent = ""; return b64ToRows(t); }
+  if (location.protocol === "file:") throw new Error("file");
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const total = +res.headers.get("content-length") || 0; let got = 0; const parts = [];
+  const reader = res.body.getReader(); const dec = new TextDecoder();
+  for (;;) {
+    const { value, done } = await reader.read(); if (done) break;
+    got += value.byteLength; parts.push(dec.decode(value, { stream: true }));
+    if (total) loadfill.style.width = Math.min(99, Math.round((load.done / load.total + got / total / FILES.length) * 100)) + "%";
+  }
+  parts.push(dec.decode());
+  return b64ToRows(parts.join(""));
+}
+const yieldNow = () => new Promise(r => setTimeout(r, 0));
+async function loadAll(){
+  for (let fi = 0; fi < FILES.length; fi++) {
+    let data;
+    try { data = await fetchRows(FILES[fi], fi); }
+    catch (e) { load.failed = true; load.reason = e && e.message; setLoad(); continue; }
+    const rows = data.rows; load.total = data.total || load.total;
+    for (let i = 0; i < rows.length; i++) {
+      const r = makeRec(rows[i]); index(r); ALL.push(r); byId.set(String(r.id), r);
+      if (i % 2000 === 1999) { load.done = ALL.length; setLoad(); await yieldNow(); }
+    }
+    load.done = ALL.length; load.files++; setLoad();
+    runSearch(true);
+    if (pendingId && byId.has(pendingId)) { select(pendingId, true); pendingId = null; }
+    else if (!state.selected && !pendingId && state.results.length && !isNarrow()) select(state.results[0].id, false);
+    if (state.view === "saved") renderSaved();
+  }
+  // 編集収録（裁判所サイト未掲載）の判例を追加
+  CASES.filter(c => !c.lid).forEach(c => { const r = makeEditorialRec(c); index(r); ALL.push(r); byId.set(String(r.id), r); });
+  ALL.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  load.finished = true; load.done = ALL.length; setLoad();
+  $("#brandSub").textContent = `裁判所ウェブサイト掲載 ${fmtN(ALL.length - CASES.filter(c => !c.lid).length)} 件を横断検索`;
+  fillAbout(); fillCourtList();
+  runSearch(true);
+  if (pendingId && byId.has(pendingId)) select(pendingId, true);
+  pendingId = null;
+  if (!state.selected && state.results.length && !isNarrow()) select(state.results[0].id, false);
+  else if (state.selected) { const r = byId.get(state.selected); if (r) renderDetail(r); }
+  if (state.view === "saved") renderSaved();
+}
+function fillAbout(){
+  const counts = CATS.map(c => [c, ALL.filter(r => r.cat & c.bit).length]);
+  const items = { 1: "判示事項・裁判要旨・参照法条・判例集等・原審", 2: "判示事項・原審", 4: "判示事項（一部）・主文冒頭", 8: "判示事項・裁判要旨（一部）・主文冒頭", 16: "分野・主文冒頭", 32: "権利種別・訴訟類型・主文冒頭", 64: "通称・編集要約・キーワード（編集部作成）" };
+  $("#aboutCats").innerHTML = counts.map(([c, n]) => `<tr><td>${esc(c.label)}</td><td class="num">${fmtN(n)}</td><td>${esc(items[c.bit] || "")}</td></tr>`).join("");
+  $("#aboutTotal").textContent = fmtN(ALL.filter(r => typeof r.id === "number").length);
+  $("#aboutEd").textContent = fmtN(CASES.length);
+}
+function fillCourtList(){
+  const cnt = new Map(); ALL.forEach(r => { if (r.ck) cnt.set(r.ck, (cnt.get(r.ck) || 0) + 1); });
+  const list = [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 400);
+  $("#courtList").innerHTML = list.map(([k, n]) => `<option value="${esc(k)}">${fmtN(n)} 件</option>`).join("");
+}
+
+// ---------- 状態 ----------
+const state = { q: "", groups: [], neg: [], cats: new Set(), areas: new Set(), court: "", courtName: "", kind: "", result: "", from: "", to: "", sort: "rel", view: "search", selected: null, results: [], shown: PAGE, loose: new Set() };
+const KEY = "hanrei-lens:saved";
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+function persist(){ try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+
+// ---------- 検索 ----------
+const PART = /[のにをがはと・]/g, PART_T = /[のにをがはと・]/;
+function tokenize(q){
+  const out = []; const re = /"([^"]*)"|「([^」]*)」|(\S+)/g; let m;
+  while ((m = re.exec(q))) { const t = m[1] !== undefined ? m[1] : m[2] !== undefined ? m[2] : m[3]; if (t && t.trim()) out.push({ t: t.trim(), phrase: m[3] === undefined }); }
+  return out;
+}
+function expand(t){ const v = new Set([t]); for (const [a, b] of SYN) { if (t.includes(a)) v.add(t.split(a).join(b)); if (t.includes(b)) v.add(t.split(b).join(a)); } return [...v]; }
+function parseQuery(q){
+  const groups = [], neg = []; let orNext = false;
+  for (const tok of tokenize(norm(q))) {
+    const t = tok.t;
+    if (!tok.phrase && t === "or") { orNext = true; continue; }
+    if (!tok.phrase && t.length > 1 && t[0] === "-") { neg.push(t.slice(1)); continue; }
+    if (!tok.phrase && (t === "-" || t === "|")) continue;
+    const alts = (tok.phrase ? [t] : t.split("|").filter(Boolean)).flatMap(expand);
+    if (orNext && groups.length) groups[groups.length - 1].push(...alts); else groups.push(alts);
+    orNext = false;
+  }
+  return { groups: groups.map(g => [...new Set(g)]), neg };
+}
+function segOf(b, pos){ let s = 0; for (let i = 1; i < b.length; i++) { if (b[i] <= pos) s = i; else break; } return s; }
+function scoreRec(r){
+  const hay = r.hay;
+  for (const n of state.neg) if (hay.includes(n)) return -1;
+  let s = 0;
+  for (const g of state.groups) {
+    let w = 0;
+    for (const t of g) { let i = 0; while ((i = hay.indexOf(t, i)) !== -1) { w += SEGW[segOf(r.b, i)]; i += t.length; } }
+    if (!w) return -1; s += w;
+  }
+  return s + (r.ed ? 2 : 0);
+}
+function passFilters(r, mask, amask, from, to, cn){
+  if (mask && !(r.cat & mask)) return false;
+  if (amask && !(r.am & amask)) return false;
+  if (state.court && r.cg !== state.court) return false;
+  if (cn && !r.ckn.includes(cn)) return false;
+  if (state.kind && r.kind !== state.kind) return false;
+  if (state.result && r.result !== state.result) return false;
+  if (r.year < from || r.year > to) return false;
+  return true;
+}
+function runSearch(keepShown){
+  const p = parseQuery(state.q); state.groups = p.groups; state.neg = p.neg; state.loose = new Set();
+  const from = state.from ? +state.from : -Infinity, to = state.to ? +state.to : Infinity;
+  let mask = 0; state.cats.forEach(b => { mask |= b; });
+  let amask = 0; state.areas.forEach(b => { amask |= b; });
+  const cn = norm(state.courtName).replace(/\s+/g, "");
+  const hasTerms = state.groups.length > 0;
+  const rows = [];
+  for (let i = 0; i < ALL.length; i++) {
+    const r = ALL[i];
+    if (!passFilters(r, mask, amask, from, to, cn)) continue;
+    if (hasTerms || state.neg.length) { const s = scoreRec(r); if (s < 0) continue; rows.push([r, s]); }
+    else rows.push([r, 0]);
+  }
+  // 「権利の濫用」を「権利濫用」でも拾う緩い一致（結果が少ないときだけ）
+  if (hasTerms && rows.length < 30 && state.groups.some(g => g.some(t => PART_T.test(t) || t.length >= 4))) {
+    const lg = state.groups.map(g => g.map(t => t.replace(PART, "")).filter(t => t.length >= 2)).filter(g => g.length);
+    if (lg.length === state.groups.length) {
+      const seen = new Set(rows.map(x => x[0].id));
+      for (let i = 0; i < ALL.length; i++) {
+        const r = ALL[i]; if (seen.has(r.id) || !passFilters(r, mask, amask, from, to, cn)) continue;
+        if (state.neg.some(n => r.hay.includes(n))) continue;
+        const h = r.hay.replace(PART, "");
+        if (lg.every(g => g.some(t => h.includes(t)))) { rows.push([r, 1]); state.loose.add(r.id); }
+      }
+    }
+  }
+  const byDate = (a, b) => a[0].date < b[0].date ? 1 : a[0].date > b[0].date ? -1 : 0;
+  if (state.sort === "new") { if (hasTerms) rows.sort(byDate); }
+  else if (state.sort === "old") rows.sort((a, b) => -byDate(a, b));
+  else if (hasTerms) rows.sort((a, b) => (b[1] - a[1]) || byDate(a, b));
+  state.results = rows.map(x => x[0]);
+  if (!keepShown) state.shown = PAGE;
+  renderResults();
+  pushHash();
+}
+
+// ---------- 表示補助 ----------
+const allTerms = () => state.groups.flat();
+const toKanjiDigits = d => [...d].map(c => "〇一二三四五六七八九"[+c]).join("");
+const toWideDigits = d => [...d].map(c => "０１２３４５６７８９"[+c]).join("");
+function hl(text){
+  let out = esc(text);
+  const terms = allTerms(); if (!terms.length) return out;
+  const vs = new Set();
+  for (const t of terms) { vs.add(t); if (/\d/.test(t)) { vs.add(t.replace(/\d+/g, toKanjiDigits)); vs.add(t.replace(/\d+/g, toWideDigits)); } }
+  const pat = [...vs].map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).sort((a, b) => b.length - a.length).join("|");
+  if (!pat) return out;
+  try { out = out.replace(new RegExp("(" + pat + ")", "gi"), "<mark>$1</mark>"); } catch (e) {}
+  return out;
+}
+function snippet(r){
+  const cands = [r.gist, r.cgist, r.ed ? r.ed.summary : "", r.ex];
+  const terms = allTerms();
+  if (terms.length) {
+    for (const c of cands) {
+      if (!c) continue; const nc = norm(c);
+      const t = terms.find(t => nc.includes(t));
+      if (t) { const i = Math.max(0, nc.indexOf(t) - 40); const s = (i > 0 ? "…" : "") + c.slice(i, i + 130) + (i + 130 < c.length ? "…" : ""); return { html: hl(s), cls: "snip summ" }; }
+    }
+  }
+  const b = cands.find(Boolean) || "";
+  return { html: hl(b.slice(0, 160)) + (b.length > 160 ? "…" : ""), cls: "snip" };
+}
+function titleOf(r){ return r.ed ? r.ed.name : (r.name || "（事件名の記載なし）"); }
+function metaHtml(r){
+  const cats = catLabels(r.cat); const areas = areaLabels(r.am).slice(0, 3);
+  return `<div class="meta">${cats.length ? `<span class="cat">${cats.map(esc).join(" · ")}</span>` : ""}${areas.length ? `<span>${areas.map(esc).join("・")}</span>` : ""}${r.ed ? `<span class="badge">解説</span>` : ""}<span>${esc(r.court)}</span><span>${esc(wareki(r.date))}</span>${r.kind ? `<span>${esc(r.kind)}</span>` : ""}${r.result ? `<span>${esc(r.result)}</span>` : ""}${r.num ? `<span>${hl(r.num)}</span>` : ""}${state.loose.has(r.id) ? `<span class="badge" style="background:var(--panel-2);color:var(--muted)">近い表現</span>` : ""}</div>`;
+}
+
+// ---------- 一覧 ----------
+const resultList = $("#resultList"), moreBtn = $("#moreBtn");
+function rowHtml(r, withMemo){
+  const sid = String(r.id); const memo = saved[sid] && saved[sid].memo;
+  return `<li class="row${state.selected === sid ? " sel" : ""}" data-id="${esc(sid)}" tabindex="0" role="button" aria-label="${esc(titleOf(r))}">
+    ${metaHtml(r)}
+    <div class="ttl">${hl(titleOf(r))}${r.ed && r.name ? `<span class="alias">${hl(r.name)}</span>` : ""}</div>
+    <button type="button" class="star${saved[sid] ? " on" : ""}" data-star="${esc(sid)}" aria-label="${saved[sid] ? "保存を解除" : "保存する"}">${saved[sid] ? "★" : "☆"}</button>
+    ${withMemo && memo ? `<div class="memo-prev">${esc(memo)}</div>` : (() => { const s = snippet(r); return s.html ? `<div class="${s.cls}">${s.html}</div>` : ""; })()}
+  </li>`;
+}
+function renderResults(){
+  $("#resultCount").textContent = fmtN(state.results.length);
+  $("#resultQuery").textContent = state.q.trim() ? `「${state.q.trim()}」` : "";
+  $("#srcLabel").textContent = load.finished ? `裁判所ウェブサイト 2025年1月時点 · ${fmtN(ALL.length)} 件` : (ALL.length ? `読み込み中 · ${fmtN(ALL.length)} 件で検索` : "");
+  if (!state.results.length) {
+    resultList.innerHTML = ALL.length ? `<li class="empty"><b>該当する判例がありません</b>語句を減らす、絞り込みを外す、OR検索（A OR B）に変える、事件番号を「平成28(受)2099」の形式で入力する、などをお試しください。</li>` : `<li class="empty"><b>裁判例データを読み込んでいます</b>数秒お待ちください。</li>`;
+    moreBtn.hidden = true; return;
+  }
+  const slice = state.results.slice(0, state.shown);
+  resultList.innerHTML = slice.map(r => rowHtml(r, false)).join("");
+  moreBtn.hidden = state.results.length <= state.shown;
+  moreBtn.textContent = `さらに表示（残り ${fmtN(state.results.length - state.shown)} 件）`;
+}
+moreBtn.addEventListener("click", () => {
+  const start = state.shown; state.shown += PAGE;
+  const frag = state.results.slice(start, state.shown).map(r => rowHtml(r, false)).join("");
+  resultList.insertAdjacentHTML("beforeend", frag);
+  moreBtn.hidden = state.results.length <= state.shown;
+  moreBtn.textContent = `さらに表示（残り ${fmtN(Math.max(0, state.results.length - state.shown))} 件）`;
+});
+function renderSaved(){
+  const ids = Object.keys(saved).sort((a, b) => (saved[b].at || 0) - (saved[a].at || 0));
+  $("#savedTotal").textContent = ids.length;
+  const list = $("#savedList");
+  if (!ids.length) { list.innerHTML = `<li class="empty"><b>保存した判例はまだありません</b>一覧の ☆ か、詳細画面の「保存」から追加できます。</li>`; }
+  else {
+    const recs = ids.map(id => byId.get(id)).filter(Boolean);
+    list.innerHTML = recs.map(r => rowHtml(r, true)).join("") + (recs.length < ids.length ? `<li class="empty">${fmtN(ids.length - recs.length)} 件はデータ読み込み後に表示されます</li>` : "");
+  }
+  updateSavedCount();
+}
+function updateSavedCount(){ const n = Object.keys(saved).length; const el = $("#savedCount"); el.textContent = n; el.dataset.zero = n ? "0" : "1"; }
+
+// ---------- ブックマークの書き出し・読み込み ----------
+function exportItems(){
+  return Object.keys(saved).sort((a, b) => (saved[b].at || 0) - (saved[a].at || 0)).map(id => {
+    const r = byId.get(id);
+    return { id: r && typeof r.id === "number" ? r.id : id, title: r ? titleOf(r) : "", caseNo: r ? r.num : "", court: r ? r.court : "", date: r ? r.date : "", memo: saved[id].memo || "", savedAt: new Date(saved[id].at || 0).toISOString(), url: r ? detailUrl(r) : "" };
+  });
+}
+function exportJsonText(){ return JSON.stringify({ app: "hanrei-lens", version: 1, exported: new Date().toISOString(), items: exportItems() }, null, 2); }
+function exportCsvText(){
+  const q = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+  const head = ["判例ID", "事件名", "事件番号", "裁判所", "裁判年月日", "メモ", "裁判所サイトURL", "保存日時"];
+  return "﻿" + [head.map(q).join(",")].concat(exportItems().map(it => [it.id, it.title, it.caseNo, it.court, it.date, it.memo, it.url, it.savedAt].map(q).join(","))).join("\r\n");
+}
+let dlCap = null; // claude.ai 上では downloads 機能を使う（通常のダウンロードリンクは無効なため）
+(async () => { try { dlCap = (window.claude && typeof window.claude.use === "function") ? await window.claude.use("downloads") : null; } catch (e) { dlCap = null; } })();
+async function download(name, text, type){
+  if (dlCap) { try { await dlCap.save({ filename: name, data: new Blob([text], { type }) }); return true; } catch (e) { return false; } }
+  try { const blob = new Blob([text], { type }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); return true; } catch (e) { return false; }
+}
+function importFromText(text){
+  let data; try { data = JSON.parse(text); } catch (e) { return { error: "JSONとして読み取れませんでした。" }; }
+  const items = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
+  if (!items) return { error: "ブックマークの形式ではありません（items 配列がありません）。" };
+  let added = 0, updated = 0;
+  for (const it of items) {
+    if (!it || it.id === undefined || it.id === null) continue;
+    const id = String(it.id); const memo = typeof it.memo === "string" ? it.memo : ""; const at = it.savedAt ? Date.parse(it.savedAt) || Date.now() : Date.now();
+    if (!saved[id]) { saved[id] = { memo, at }; added++; }
+    else if (memo && !(saved[id].memo || "").trim()) { saved[id].memo = memo; updated++; }
+  }
+  persist(); updateSavedCount(); renderSaved();
+  return { added, updated, total: items.length };
+}
+(function bindIo(){
+  const st = $("#ioState"), ta = $("#ioText");
+  const stamp = () => new Date().toISOString().slice(0, 10);
+  const hint = ok => { st.textContent = ok ? "書き出しました。ダウンロードが始まらない環境では「テキストで表示」からコピーしてください。" : "この環境ではダウンロードできません。「テキストで表示」からコピーしてください。"; };
+  $("#exportJson").addEventListener("click", async () => { if (!Object.keys(saved).length) { st.textContent = "保存した判例がありません。"; return; } hint(await download(`hanrei-lens-bookmarks-${stamp()}.json`, exportJsonText(), "application/json")); });
+  $("#exportCsv").addEventListener("click", async () => { if (!Object.keys(saved).length) { st.textContent = "保存した判例がありません。"; return; } hint(await download(`hanrei-lens-bookmarks-${stamp()}.csv`, exportCsvText(), "text/csv")); });
+  $("#exportText").addEventListener("click", () => {
+    if (!ta.hidden) { ta.hidden = true; st.textContent = ""; const b = $("#importText"); if (b) b.remove(); return; }
+    ta.value = exportJsonText(); ta.hidden = false; ta.select();
+    if (!$("#importText")) { const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.id = "importText"; b.textContent = "この欄の内容を読み込む"; ta.insertAdjacentElement("afterend", b); b.addEventListener("click", () => { const r = importFromText(ta.value); st.textContent = r.error || `${fmtN(r.total)} 件を読み込みました（新規 ${r.added}、メモ更新 ${r.updated}）。`; }); }
+    st.textContent = "この内容をコピーして保存するか、別の端末で書き出したJSONを貼り付けて「この欄の内容を読み込む」を押してください。";
+  });
+  $("#importFile").addEventListener("change", ev => {
+    const f = ev.target.files && ev.target.files[0]; if (!f) return;
+    const fr = new FileReader(); fr.onload = () => { const r = importFromText(String(fr.result)); st.textContent = r.error || `${fmtN(r.total)} 件を読み込みました（新規 ${r.added}、メモ更新 ${r.updated}）。`; }; fr.onerror = () => { st.textContent = "ファイルを読めませんでした。"; }; fr.readAsText(f);
+    ev.target.value = "";
+  });
+})();
+
+// ---------- 詳細 ----------
+const detailEl = $("#detail"), detailIn = $("#detailIn");
+const chatTurns = new Map();
+let aiState = "pending", sampleFn = null, currentAbort = null, simToken = 0;
+const AI_COPY = {
+  rate_limited: "利用が集中しています。少し時間をおいてからもう一度お試しください。",
+  session_expired: "claude.ai にもう一度サインインしてからお試しください。",
+  refused: "この内容には回答できませんでした。質問を変えてお試しください。",
+  empty_completion: "回答が生成されませんでした。もう一度お試しください。",
+  invalid_json: "回答の形式を読み取れませんでした。もう一度お試しください。",
+  prompt_too_large: "内容が長すぎます。質問を短くしてお試しください。",
+  upstream_error: "接続に問題がありました。もう一度お試しください。",
+  auth: "APIキーが無効か、権限がありません。設定を確認してください。",
+  invalid_request: "リクエストが受け付けられませんでした。モデルIDを確認してください。"
+};
+const AI_HIDE = new Set(["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"]);
+const cut = (s, n) => s && s.length > n ? s.slice(0, n) + "…" : (s || "");
+function caseContext(r){
+  const lines = [
+    `事件名: ${titleOf(r)}${r.ed && r.name ? `（${r.name}）` : ""}`,
+    `裁判所: ${r.court}`, `裁判年月日: ${wareki(r.date)}（${r.date}）`, `事件番号: ${r.num || "（記載なし）"}`,
+    r.kind ? `裁判種別: ${r.kind}` : "", r.result ? `結果: ${r.result}` : "", r.rep ? `判例集等: ${r.rep}` : "",
+    r.ocourt ? `原審: ${r.ocourt} ${r.onum} ${wareki(r.odate)}` : "",
+    r.gist ? `判示事項: ${cut(r.gist, 1500)}` : "", r.cgist ? `裁判要旨: ${cut(r.cgist, 2500)}` : "",
+    r.law ? `参照法条: ${cut(r.law, 500)}` : "", r.ex ? `主文（冒頭抜粋）: ${r.ex}` : "",
+    r.ed ? `編集部の解説（要約）: ${r.ed.summary}\nキーワード: ${r.ed.tags.join("、")}` : ""
+  ].filter(Boolean);
+  return lines.join("\n");
+}
+function summaryPrompt(r){
+  return `あなたは、法律の専門家ではない一般の人に日本の裁判例をわかりやすく説明する解説者です。以下の裁判例について、次の見出しごとに日本語で答えてください。見出しはそのまま使い、全体で400字程度にしてください。\n\n【ひとことで】1文\n【なにが争われたか】2〜3文\n【裁判所の判断】2〜3文\n【この判例の意味】1〜2文（その後の実務や日常生活にどう関わるか）\n\n専門用語には短い言い換えを添えてください。事実の記述は下記の情報の範囲にとどめ、情報にないことは推測で断定しないでください。情報が書誌事項と主文しかない場合は、その旨を述べたうえで分かる範囲で説明してください。これは一般的な解説であり法的助言ではありません。\n\n${caseContext(r)}`;
+}
+const QA_RULES = r => `以下は日本の裁判例の情報です。ユーザーの質問に対し、この情報と一般的な法律知識の範囲で、日本語で簡潔に（200字程度まで）答えてください。判例の内容として情報にないことは「この判例の情報だけでは分かりません」と述べ、推測で断定しないでください。個別の事案への法的助言はできない旨を必要に応じて添えてください。\n\n${caseContext(r)}`;
+function lawList(s){ return (s || "").split(/[，,、]\s*/).map(x => x.trim()).filter(Boolean); }
+
+// ---------- 審級（原審・上訴審） ----------
+const sameCourt = (a, b) => !a || !b || a === b || a.startsWith(b) || b.startsWith(a);
+function lowerOf(r){
+  if (!r.onum) return null;
+  const c = byNum.get(norm(r.onum)) || []; let best = null; const ock = courtKey(r.ocourt);
+  for (const o of c) { if (o === r) continue; if (ock && !sameCourt(ock, o.ck)) continue; if (r.odate && o.date !== r.odate) { if (!best) best = o; continue; } return o; }
+  return best;
+}
+function uppersOf(r){
+  if (!r.num) return [];
+  return (byONum.get(norm(r.num)) || []).filter(o => o !== r && sameCourt(courtKey(o.ocourt), r.ck) && (!o.odate || o.odate === r.date));
+}
+function levelLabel(r){ const g = r.cg; return g === "最高裁大法廷" || g === "最高裁小法廷" ? "最高裁" : g === "高等裁判所" ? "高裁" : g === "地方裁判所" ? "地裁" : g === "家庭裁判所" ? "家裁" : g === "簡易裁判所" ? "簡裁" : g === "大審院" ? "大審院" : "—"; }
+function lineageHtml(r){
+  const down = []; let cur = r;
+  for (let i = 0; i < 4; i++) { const l = lowerOf(cur); if (!l || l === r || down.includes(l)) break; down.push(l); cur = l; }
+  const ups = []; let layer = uppersOf(r); const seen = new Set([r]);
+  for (let i = 0; i < 4 && layer.length; i++) { layer = layer.filter(o => !seen.has(o)); layer.forEach(o => seen.add(o)); if (!layer.length) break; ups.push(layer); layer = [...new Set(layer.flatMap(uppersOf))]; }
+  const item = (o, cls) => `<li class="${cls}" ${cls === "link" ? `data-id="${esc(String(o.id))}" tabindex="0" role="button"` : ""}><span class="lv">${esc(levelLabel(o))}</span><span class="t">${esc(titleOf(o))}</span><span class="m">${esc(o.court)} ${esc(wareki(o.date))}${o.num ? " " + esc(o.num) : ""}${o.result ? " · " + esc(o.result) : ""}</span></li>`;
+  const parts = [];
+  if (!down.length && r.ocourt) parts.push(`<li class="none"><span class="lv">原審</span><span class="t" style="font-family:var(--sans);font-weight:400;color:var(--muted)">${esc(r.ocourt)}${r.onum ? " " + esc(r.onum) : ""}${r.odate ? " " + esc(wareki(r.odate)) : ""}（裁判所サイト未収録）</span></li>`);
+  down.slice().reverse().forEach(o => parts.push(item(o, "link")));
+  parts.push(item(r, "cur"));
+  ups.forEach(layer => layer.forEach(o => parts.push(item(o, "link"))));
+  if (parts.length === 1) return `<span class="sim-state">原審・上訴審の情報は記録されていません。</span>`;
+  return `<ul class="lineage">${parts.join("")}</ul>`;
+}
+
+function renderDetail(r){
+  const sid = String(r.id); const isSaved = !!saved[sid]; const memo = isSaved ? (saved[sid].memo || "") : "";
+  const cats = catLabels(r.cat); const areas = areaLabels(r.am); const durl = detailUrl(r), purl = pdfUrl(r);
+  detailIn.innerHTML = `
+    <div class="d-kicker">${cats.map(c => `<span class="cat">${esc(c)}</span>`).join("")}${r.ed ? `<span class="badge">解説</span>` : ""}<span>${esc(r.court)}</span>${r.kind ? `<span>${esc(r.kind)}</span>` : ""}<span>${esc(wareki(r.date))}</span></div>
+    <h2 class="d-title">${esc(titleOf(r))}</h2>
+    ${r.ed && r.name ? `<p class="d-alias">${esc(r.name)}</p>` : ""}
+    <dl class="d-cite">
+      <dt>事件番号</dt><dd>${r.num ? esc(r.num) : "—"}</dd>
+      <dt>裁判年月日</dt><dd>${esc(wareki(r.date))}（${esc(r.date)}）</dd>
+      ${r.result ? `<dt>結果</dt><dd>${esc(r.result)}</dd>` : ""}
+      ${r.rep ? `<dt>判例集等</dt><dd>${esc(r.rep)}</dd>` : ""}
+      ${r.ocourt ? `<dt>原審</dt><dd>${esc(r.ocourt)}${r.onum ? " " + esc(r.onum) : ""}${r.odate ? " " + esc(wareki(r.odate)) : ""}</dd>` : ""}
+      ${areas.length ? `<dt>分野（推定）</dt><dd>${esc(areas.join("・"))}</dd>` : ""}
+      ${r.right ? `<dt>権利種別</dt><dd>${esc(r.right)}</dd>` : ""}
+      ${r.ltype ? `<dt>訴訟類型</dt><dd>${esc(r.ltype)}</dd>` : ""}
+    </dl>
+    <div class="d-actions">
+      <button type="button" class="btn accent${isSaved ? " on" : ""}" id="bmBtn">${isSaved ? "★ 保存済み" : "☆ 保存する"}</button>
+      <button type="button" class="btn" id="copyCite">引用をコピー</button>
+      <button type="button" class="btn" id="copyLink">この判例のリンク</button>
+      ${durl ? `<a class="btn" href="${durl}" target="_blank" rel="noopener">裁判所サイトで見る ↗</a>` : ""}
+      ${purl ? `<a class="btn primary" href="${purl}" target="_blank" rel="noopener">全文PDF ↗</a>` : ""}
+    </div>
+    ${r.ed ? `<section class="d-sec ed"><h3>解説（編集部の要約）</h3><p>${hl(r.ed.summary)}</p><div class="tags" style="margin-top:8px">${r.ed.tags.map(t => `<button type="button" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div></section>` : ""}
+    ${r.gist ? `<section class="d-sec"><h3>判示事項</h3><p>${hl(r.gist)}</p></section>` : ""}
+    ${r.cgist ? `<section class="d-sec"><h3>裁判要旨</h3><p>${hl(r.cgist)}</p></section>` : ""}
+    ${r.law ? `<section class="d-sec"><h3>参照法条</h3><div class="laws">${lawList(r.law).map(l => `<span>${hl(l)}</span>`).join("")}</div></section>` : ""}
+    ${r.ex ? `<section class="d-sec"><h3>主文（冒頭抜粋）</h3><div class="ex">${hl(r.ex)}</div></section>` : ""}
+    ${!r.gist && !r.cgist && !r.ex && !r.ed ? `<section class="d-sec"><p class="ai-off">この裁判例には判示事項・要旨が付されていません。内容は全文PDFで確認してください。</p></section>` : ""}
+    <section class="d-sec"><h3>審級</h3><div id="lineageBox">${load.finished ? lineageHtml(r) : `<span class="sim-state">データ読み込み後に表示します</span>`}</div></section>
+    <section class="d-sec"><h3>メモ</h3><textarea class="memo" id="memo" placeholder="この判例についてのメモ。入力すると自動で保存されます。">${esc(memo)}</textarea><div class="memo-state" id="memoState"></div></section>
+    <div class="ai" id="aiBox">
+      <div class="ai-head"><h3><span class="dot"></span>AIでやさしく読む</h3><div id="aiCtl"></div></div>
+      <div id="aiBody"></div>
+    </div>
+    <section class="d-sec"><h3>類似判例</h3><div id="simBox"><span class="sim-state">${load.finished ? "計算中…" : "データ読み込み後に計算します"}</span></div></section>
+    <div class="src-note">書誌情報・判示事項・裁判要旨は裁判所ウェブサイトの記載、主文はPDFからの機械抽出（誤変換を含むことがあります）、分野は事件番号の符号からの推定、解説は編集部の要約です。正確な内容は全文PDFで確認してください。</div>`;
+  detailEl.scrollTop = 0;
+  bindDetail(r);
+  renderAi(r);
+  computeSimilar(r);
+}
+function copyText(btn, text, label, doneLabel){
+  const done = () => { btn.textContent = doneLabel; setTimeout(() => { btn.textContent = label; }, 1600); };
+  const fallback = () => { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = text; } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+}
+function bindDetail(r){
+  const sid = String(r.id);
+  $("#bmBtn").addEventListener("click", () => { toggleSave(sid); renderDetail(r); });
+  $("#copyCite").addEventListener("click", ev => copyText(ev.currentTarget, `${titleOf(r)}（${shortCite(r)}${wareki(r.date)}${r.rep ? " " + r.rep : ""}${r.num ? " " + r.num : ""}）`, "引用をコピー", "コピーしました"));
+  $("#copyLink").addEventListener("click", ev => copyText(ev.currentTarget, baseUrl() + "#" + sid, "この判例のリンク", "リンクをコピーしました"));
+  detailIn.querySelectorAll("[data-tag]").forEach(b => b.addEventListener("click", () => { setQuery(b.dataset.tag); switchView("search"); closeDetail(); }));
+  detailIn.querySelectorAll(".lineage li.link").forEach(li => { const go = () => select(li.dataset.id, true); li.addEventListener("click", go); li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+  let t; const memo = $("#memo"), st = $("#memoState");
+  memo.addEventListener("input", () => {
+    clearTimeout(t); st.textContent = "保存中…";
+    t = setTimeout(() => {
+      const v = memo.value;
+      if (v.trim()) saved[sid] = { memo: v, at: (saved[sid] && saved[sid].at) || Date.now() };
+      else if (saved[sid]) saved[sid].memo = "";
+      persist(); st.textContent = v.trim() ? "保存しました（このブラウザ内）" : ""; updateSavedCount();
+      const bm = $("#bmBtn"); if (bm && saved[sid]) { bm.classList.add("on"); bm.textContent = "★ 保存済み"; }
+      refreshRowsStar();
+    }, 400);
+  });
+}
+function toggleSave(sid){
+  if (saved[sid]) delete saved[sid]; else saved[sid] = { memo: "", at: Date.now() };
+  persist(); updateSavedCount(); refreshRowsStar(); if (state.view === "saved") renderSaved();
+}
+function refreshRowsStar(){
+  document.querySelectorAll("[data-star]").forEach(b => { const on = !!saved[b.dataset.star]; b.classList.toggle("on", on); b.textContent = on ? "★" : "☆"; });
+}
+
+// ---------- 類似判例 ----------
+function bigramsOf(text, max){
+  const s = norm(text).replace(/[\s、。，．・「」『』（）()：:；;,.\-–—【】〔〕\u0001]/g, "");
+  const set = new Set();
+  for (let i = 0; i < s.length - 1 && set.size < max; i++) { const g = s.slice(i, i + 2); if (!/^[0-9]{2}$/.test(g)) set.add(g); }
+  return Array.from(set);
+}
+function computeSimilar(r){
+  const box = $("#simBox"); if (!box) return;
+  const token = ++simToken;
+  if (!load.finished) return;
+  const base = (r.gist || "") + " " + (r.cgist || "") + (!r.gist && !r.cgist ? " " + r.ex : "") + (r.gist || r.cgist || r.ex ? "" : " " + r.name + (r.ed ? " " + r.ed.summary : ""));
+  const grams = bigramsOf(base, 200);
+  if (grams.length < 8) { box.innerHTML = `<span class="sim-state">比較できる要旨がないため計算できません。</span>`; return; }
+  const gl = grams.length; const baseLen = Math.max(40, norm(base).length);
+  const df = new Uint32Array(gl); const cands = []; let i = 0; const STEP = 4000;
+  let minShared = 3;
+  // 比較対象は判示事項・裁判要旨（無ければ主文冒頭）のみ
+  const simText = o => { const t = o.hay.slice(o.b[3], o.b[5]); return t.length > 12 ? t : o.hay.slice(o.b[7], o.b[8]); };
+  const step = () => {
+    if (token !== simToken) return;
+    const end = Math.min(ALL.length, i + STEP);
+    for (; i < end; i++) {
+      const o = ALL[i]; const h = simText(o); if (h.length < 10) continue;
+      let shared = 0; const hit = [];
+      for (let k = 0; k < gl; k++) if (h.includes(grams[k])) { df[k]++; shared++; hit.push(k); }
+      if (o === r || shared < minShared) continue;
+      cands.push([o, hit, h.length]);
+      if (cands.length > 30000) { minShared++; for (let j = cands.length - 1; j >= 0; j--) if (cands[j][1].length < minShared) cands.splice(j, 1); }
+    }
+    if (i < ALL.length) { setTimeout(step, 0); return; }
+    if (token !== simToken) return;
+    const N = ALL.length; const idf = new Float64Array(gl); let selfW = 0;
+    for (let k = 0; k < gl; k++) { idf[k] = Math.log((N + 1) / (df[k] + 1)); selfW += idf[k] * idf[k]; }
+    const top = [];
+    for (const [o, hit, hlen] of cands) {
+      let w = 0; for (const k of hit) w += idf[k] * idf[k];
+      const sc = w / selfW / Math.sqrt(Math.max(1, hlen / baseLen));
+      if (top.length < 6 || sc > top[top.length - 1][1]) { top.push([o, sc]); top.sort((a, b) => b[1] - a[1]); if (top.length > 6) top.pop(); }
+    }
+    if (!top.length) { box.innerHTML = `<span class="sim-state">似た判例は見つかりませんでした。</span>`; return; }
+    box.innerHTML = `<ul class="sim">${top.map(([o, s]) => `<li data-id="${esc(String(o.id))}" tabindex="0" role="button"><span class="t">${esc(titleOf(o))}</span><span class="pct">${Math.round(Math.min(1, s) * 100)}%</span><span class="m">${esc(o.court)} ${esc(wareki(o.date))}${o.num ? " " + esc(o.num) : ""}</span><span class="bar"><i style="width:${Math.max(4, Math.round(Math.min(1, s) * 100))}%"></i></span></li>`).join("")}</ul>`;
+    box.querySelectorAll("li").forEach(li => { const go = () => select(li.dataset.id, true); li.addEventListener("click", go); li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+  };
+  setTimeout(step, 0);
+}
+
+// ---------- AI ----------
+// 提供元は2通り: claude.ai 上で開いたときの sample 機能 / 利用者自身の Anthropic API キー（ブラウザに保存）
+const API_KEY_STORE = "hanrei-lens:api"; const DEFAULT_MODEL = "claude-sonnet-5-5";
+let apiCfg = null; try { apiCfg = JSON.parse(localStorage.getItem(API_KEY_STORE) || "null"); } catch (e) { apiCfg = null; }
+let aiProvider = "";
+function apiSample(input, opts){
+  opts = opts || {};
+  return new Promise(async (resolve, reject) => {
+    const msgs = typeof input === "string" ? [{ role: "user", content: input }] : input.map(t => ({ role: t.role, content: t.content }));
+    let text = "", stop = null;
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST", signal: opts.signal,
+        headers: { "content-type": "application/json", "x-api-key": apiCfg.key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        body: JSON.stringify({ model: apiCfg.model || DEFAULT_MODEL, max_tokens: 1200, stream: true, messages: msgs })
+      });
+      if (!res.ok) {
+        let msg = ""; try { msg = (await res.json()).error.message; } catch (e) {}
+        const code = res.status === 401 || res.status === 403 ? "auth" : res.status === 429 ? "rate_limited" : res.status === 400 || res.status === 404 ? "invalid_request" : "upstream_error";
+        reject({ code, message: msg || ("HTTP " + res.status) }); return;
+      }
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl; while ((nl = buf.indexOf("\n")) !== -1) {
+          const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+          if (!line.startsWith("data:")) continue;
+          let ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { continue; }
+          if (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta") { text += ev.delta.text; if (opts.onText) opts.onText({ text, delta: ev.delta.text }); }
+          else if (ev.type === "message_delta" && ev.delta) stop = ev.delta.stop_reason;
+          else if (ev.type === "error") { reject({ code: "upstream_error", message: ev.error && ev.error.message, text }); return; }
+        }
+      }
+      if (!text) { reject({ code: "empty_completion", message: "empty" }); return; }
+      resolve({ text, truncated: stop === "max_tokens", modelTierApplied: "default" });
+    } catch (e) {
+      if (e && e.name === "AbortError") reject({ code: "cancelled", message: "cancelled", text });
+      else reject({ code: "upstream_error", message: String(e && e.message || e), text });
+    }
+  });
+}
+function saveApiCfg(cfg){ apiCfg = cfg; try { if (cfg) localStorage.setItem(API_KEY_STORE, JSON.stringify(cfg)); else localStorage.removeItem(API_KEY_STORE); } catch (e) {} }
+function renderApiSettings(r, body, ctl){
+  ctl.innerHTML = "";
+  body.innerHTML = `<div class="ai-off">AIによる要約と質問は、お使いの Anthropic API キーを設定すると使えます。キーはこのブラウザにだけ保存され、api.anthropic.com に直接送信されます（このサイトの運営者には送られません）。利用料金はキーの持ち主に課金されます。</div>
+    <form id="apiForm" style="display:grid;gap:8px;margin-top:10px;max-width:520px">
+      <input id="apiKey" type="password" placeholder="sk-ant-… （Anthropic API キー）" autocomplete="off" style="border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;background:var(--panel)" value="${esc(apiCfg && apiCfg.key || "")}">
+      <input id="apiModel" placeholder="モデルID（省略時 ${DEFAULT_MODEL}）" autocomplete="off" style="border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;background:var(--panel)" value="${esc(apiCfg && apiCfg.model || "")}">
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="btn primary">保存して有効にする</button>${apiCfg ? `<button type="button" class="btn" id="apiClear">キーを削除</button>` : ""}<a class="btn" href="https://platform.claude.com/" target="_blank" rel="noopener">キーを取得 ↗</a></div>
+    </form>`;
+  $("#apiForm").addEventListener("submit", ev => { ev.preventDefault(); const key = $("#apiKey").value.trim(); if (!key) return; saveApiCfg({ key, model: $("#apiModel").value.trim() || DEFAULT_MODEL }); sampleFn = apiSample; aiProvider = "api"; aiState = "on"; renderAi(r); });
+  const clr = $("#apiClear"); if (clr) clr.addEventListener("click", () => { saveApiCfg(null); sampleFn = null; aiProvider = ""; aiState = "off"; renderAi(r); });
+}
+function renderAi(r){
+  const body = $("#aiBody"), ctl = $("#aiCtl"); if (!body) return;
+  ctl.innerHTML = "";
+  if (aiState === "pending") { body.innerHTML = `<div class="ai-off">AI機能を確認しています…</div>`; return; }
+  if (aiState === "off" || aiState === "settings") { renderApiSettings(r, body, ctl); return; }
+  ctl.innerHTML = `<button type="button" class="btn primary" id="aiSum">要約する</button><button type="button" class="btn" id="aiStop" hidden>停止</button>${aiProvider === "api" ? `<button type="button" class="btn" id="aiCfg" title="APIキーの設定">設定</button>` : ""}`;
+  body.innerHTML = `<p class="ai-out" id="aiOut"></p><div class="ai-note" id="aiNote"></div>
+    <div class="ai-chat" id="aiChat"></div>
+    <form class="ai-q" id="aiForm"><input id="aiQ" placeholder="この判例について質問する（例：なぜこの結論になったの？）" autocomplete="off" aria-label="質問"><button type="submit" class="btn">送信</button></form>`;
+  const out = $("#aiOut"), note = $("#aiNote"), sumBtn = $("#aiSum"), stopBtn = $("#aiStop");
+  const cfgBtn = $("#aiCfg"); if (cfgBtn) cfgBtn.addEventListener("click", () => { aiState = "settings"; renderAi(r); });
+  const sid = String(r.id); const turns = chatTurns.get(sid) || []; chatTurns.set(sid, turns);
+  const chat = $("#aiChat"); turns.forEach(t => chat.insertAdjacentHTML("beforeend", `<div class="bub ${t.role === "user" ? "u" : "a"}">${esc(t.content)}</div>`));
+  stopBtn.addEventListener("click", () => { if (currentAbort) currentAbort.abort(); });
+  const fail = (e, target) => {
+    if (!e || typeof e !== "object") { note.textContent = AI_COPY.upstream_error; return; }
+    if (e.code === "cancelled") { if (e.text && target) target.textContent = e.text + " …（停止）"; return; }
+    if (AI_HIDE.has(e.code)) { aiState = "off"; aiProvider = ""; sampleFn = null; renderAi(r); return; }
+    if (e.text && target && e.code !== "refused") target.textContent = e.text;
+    else if (target && e.code === "refused") target.textContent = "";
+    note.textContent = (AI_COPY[e.code] || AI_COPY.upstream_error) + (e.code === "auth" || e.code === "invalid_request" ? (e.message ? `（${e.message}）` : "") : "");
+  };
+  const busy = on => { sumBtn.disabled = on; stopBtn.hidden = !on; $("#aiForm").querySelector("button").disabled = on; };
+  sumBtn.addEventListener("click", async () => {
+    note.textContent = ""; out.textContent = "考えています…"; out.classList.add("thinking"); busy(true);
+    currentAbort = new AbortController();
+    try {
+      const o = { signal: currentAbort.signal, onText: ({ text }) => { out.classList.remove("thinking"); out.textContent = text; } };
+      if (aiProvider === "claude") o.cache = { gcTime: 86400000 };
+      const res = await sampleFn(summaryPrompt(r), o);
+      out.classList.remove("thinking"); out.textContent = res.text; if (res.truncated) note.textContent = "回答が途中で切れました。";
+    } catch (e) { out.classList.remove("thinking"); if (out.textContent === "考えています…") out.textContent = ""; fail(e, out); }
+    finally { busy(false); currentAbort = null; }
+  });
+  $("#aiForm").addEventListener("submit", async ev => {
+    ev.preventDefault(); const q = $("#aiQ").value.trim(); if (!q) return; $("#aiQ").value = ""; note.textContent = "";
+    turns.push({ role: "user", content: q });
+    chat.insertAdjacentHTML("beforeend", `<div class="bub u">${esc(q)}</div><div class="bub a thinking">考えています…</div>`);
+    const bub = chat.lastElementChild; busy(true); currentAbort = new AbortController();
+    const recent = turns.slice(-8);
+    try {
+      const o = { signal: currentAbort.signal, onText: ({ text }) => { bub.classList.remove("thinking"); bub.textContent = text; } };
+      if (aiProvider === "claude") o.cache = false;
+      const res = await sampleFn([{ role: "user", content: QA_RULES(r) }, ...recent], o);
+      bub.classList.remove("thinking"); bub.textContent = res.text; turns.push({ role: "assistant", content: res.text });
+    } catch (e) { bub.classList.remove("thinking"); if (bub.textContent === "考えています…") bub.textContent = ""; fail(e, bub); if (!bub.textContent) bub.remove(); turns.pop(); }
+    finally { busy(false); currentAbort = null; bub.scrollIntoView({ block: "nearest" }); }
+  });
+}
+(async () => {
+  try { sampleFn = (window.claude && typeof window.claude.use === "function") ? await window.claude.use("sample") : null; } catch (e) { sampleFn = null; }
+  if (sampleFn) aiProvider = "claude";
+  else if (apiCfg && apiCfg.key) { sampleFn = apiSample; aiProvider = "api"; }
+  aiState = sampleFn ? "on" : "off";
+  if (state.selected) { const r = byId.get(state.selected); if (r && $("#aiBody")) renderAi(r); }
+})();
+
+// ---------- URL での状態共有 ----------
+const baseUrl = () => location.href.split("#")[0];
+let hashLock = false, lastHash = null;
+function stateToHash(){
+  const p = new URLSearchParams();
+  if (state.q.trim()) p.set("q", state.q.trim());
+  if (state.cats.size) p.set("cat", [...state.cats].join(","));
+  if (state.areas.size) p.set("area", [...state.areas].join(","));
+  if (state.court) p.set("court", state.court);
+  if (state.courtName) p.set("cn", state.courtName);
+  if (state.kind) p.set("kind", state.kind);
+  if (state.result) p.set("res", state.result);
+  if (state.from) p.set("from", state.from);
+  if (state.to) p.set("to", state.to);
+  if (state.sort !== "rel") p.set("sort", state.sort);
+  const s = p.toString();
+  if (state.selected) return s ? s + "&id=" + encodeURIComponent(state.selected) : state.selected;
+  return s;
+}
+function pushHash(){
+  if (hashLock) return;
+  const h = stateToHash(); if (h === lastHash) return; lastHash = h;
+  try { history.replaceState(null, "", h ? "#" + h : baseUrl()); } catch (e) {}
+}
+function syncFilterUi(){
+  $("#catChips").querySelectorAll("[data-bit]").forEach(b => b.classList.toggle("on", state.cats.has(+b.dataset.bit)));
+  $("#areaChips").querySelectorAll("[data-abit]").forEach(b => b.classList.toggle("on", state.areas.has(+b.dataset.abit)));
+  $("#fCourt").value = state.court; $("#fCourtName").value = state.courtName; $("#fKind").value = state.kind; $("#fResult").value = state.result;
+  $("#fFrom").value = state.from; $("#fTo").value = state.to; $("#fSort").value = state.sort;
+  qEl.value = state.q; qClear.hidden = !state.q;
+}
+function applyHash(h){
+  if (!h) return null;
+  if (!h.includes("=")) return h; // 判例IDだけの短いリンク
+  const p = new URLSearchParams(h);
+  const nums = v => new Set((v || "").split(",").map(Number).filter(Boolean));
+  hashLock = true;
+  state.q = p.get("q") || ""; state.cats = nums(p.get("cat")); state.areas = nums(p.get("area"));
+  state.court = p.get("court") || ""; state.courtName = p.get("cn") || ""; state.kind = p.get("kind") || ""; state.result = p.get("res") || "";
+  state.from = p.get("from") || ""; state.to = p.get("to") || ""; state.sort = ["rel", "new", "old"].includes(p.get("sort")) ? p.get("sort") : "rel";
+  syncFilterUi(); runSearch();
+  hashLock = false;
+  return p.get("id");
+}
+
+// ---------- 選択・表示切替 ----------
+function isNarrow(){ return window.matchMedia("(max-width: 860px)").matches; }
+function select(id, open){
+  const sid = String(id); const r = byId.get(sid); if (!r) return;
+  state.selected = sid;
+  document.querySelectorAll(".row").forEach(x => x.classList.toggle("sel", x.dataset.id === sid));
+  renderDetail(r);
+  pushHash();
+  if (open && isNarrow()) detailEl.classList.add("open");
+}
+function closeDetail(){ detailEl.classList.remove("open"); }
+$("#dClose").addEventListener("click", closeDetail);
+function switchView(v){
+  state.view = v;
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  $("#searchView").hidden = v !== "search"; $("#savedView").hidden = v !== "saved"; $("#aboutView").hidden = v !== "about";
+  if (v === "saved") { renderSaved(); $("#savedView .main").appendChild(detailEl); }
+  else if (v === "search") { $("#searchView .main").appendChild(detailEl); }
+  closeDetail();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
+function listClick(ev){
+  const star = ev.target.closest("[data-star]"); if (star) { ev.stopPropagation(); toggleSave(star.dataset.star); return; }
+  const row = ev.target.closest(".row"); if (row) select(row.dataset.id, true);
+}
+function listKey(ev){ if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList.contains("row")) { ev.preventDefault(); select(ev.target.dataset.id, true); } }
+resultList.addEventListener("click", listClick); resultList.addEventListener("keydown", listKey);
+$("#savedList").addEventListener("click", listClick); $("#savedList").addEventListener("keydown", listKey);
+
+// ---------- 検索UI ----------
+const qEl = $("#q"), qClear = $("#qClear");
+function setQuery(q){ qEl.value = q; state.q = q; qClear.hidden = !q; runSearch(); }
+let deb; qEl.addEventListener("input", () => { clearTimeout(deb); deb = setTimeout(() => setQuery(qEl.value), 220); });
+$("#searchForm").addEventListener("submit", e => { e.preventDefault(); clearTimeout(deb); setQuery(qEl.value); qEl.blur(); });
+qClear.addEventListener("click", () => { setQuery(""); qEl.focus(); });
+const chips = $("#catChips");
+chips.innerHTML = CATS.map(c => `<button type="button" class="chip${c.ed ? " ed" : ""}" data-bit="${c.bit}">${c.label}</button>`).join("");
+chips.addEventListener("click", e => { const b = e.target.closest("[data-bit]"); if (!b) return; const bit = +b.dataset.bit; if (state.cats.has(bit)) state.cats.delete(bit); else state.cats.add(bit); b.classList.toggle("on", state.cats.has(bit)); runSearch(); });
+const achips = $("#areaChips");
+achips.innerHTML = AREAS.map(a => `<button type="button" class="chip area" data-abit="${a.bit}" title="事件番号の符号などから推定した分野">${a.label}</button>`).join("");
+achips.addEventListener("click", e => { const b = e.target.closest("[data-abit]"); if (!b) return; const bit = +b.dataset.abit; if (state.areas.has(bit)) state.areas.delete(bit); else state.areas.add(bit); b.classList.toggle("on", state.areas.has(bit)); runSearch(); });
+$("#fCourt").addEventListener("change", e => { state.court = e.target.value; runSearch(); });
+let cnDeb; $("#fCourtName").addEventListener("input", e => { clearTimeout(cnDeb); cnDeb = setTimeout(() => { state.courtName = e.target.value.trim(); runSearch(); }, 220); });
+$("#fKind").addEventListener("change", e => { state.kind = e.target.value; runSearch(); });
+$("#fResult").addEventListener("change", e => { state.result = e.target.value; runSearch(); });
+$("#fFrom").addEventListener("input", e => { state.from = e.target.value; runSearch(); });
+$("#fTo").addEventListener("input", e => { state.to = e.target.value; runSearch(); });
+$("#fSort").addEventListener("change", e => { state.sort = e.target.value; runSearch(); });
+$("#fReset").addEventListener("click", () => {
+  state.cats.clear(); state.areas.clear(); state.court = state.courtName = state.kind = state.result = state.from = state.to = ""; state.sort = "rel"; state.q = "";
+  syncFilterUi(); runSearch();
+});
+$("#shareBtn").addEventListener("click", ev => {
+  const h = stateToHash();
+  copyText(ev.currentTarget, baseUrl() + (h ? "#" + h : ""), "検索条件のリンクをコピー", "コピーしました");
+});
+
+// ---------- 起動 ----------
+let pendingId = applyHash((location.hash || "").slice(1));
+updateSavedCount();
+if (!pendingId) renderResults();
+window.addEventListener("hashchange", () => {
+  const h = (location.hash || "").slice(1); if (h === lastHash) return;
+  const id = applyHash(h); if (id && byId.has(id) && id !== state.selected) select(id, true); else if (id) pendingId = id;
+});
+loadAll();
+})();
+</script>
+</body>
+</html>

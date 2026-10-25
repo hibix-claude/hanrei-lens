@@ -1729,7 +1729,7 @@ const CASES = [
 const $ = (s, r) => (r || document).querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const fmtN = n => Number(n).toLocaleString("ja-JP");
-const DATA_VERSION = "2026-10-24-202610232002";
+const DATA_VERSION = "2026-10-25-202610252232";
 const IN_CLAUDE = !!(window.claude && typeof window.claude.use === "function");
 
 // ---------- 表記の正規化（検索語と収録テキストの両方に同じ規則を適用） ----------

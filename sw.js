@@ -1,7 +1,7 @@
 /* 判例レンズ service worker
    - データファイル（data/cases-*.txt）は版番号つきでキャッシュ優先（2回目以降は16MBのダウンロードなし）
    - index.html などは「ネットワーク優先、失敗したらキャッシュ」（更新をすぐ反映しつつオフラインでも開ける） */
-const VERSION = "2026-10-25-202610252232";
+const VERSION = "2026-11-01-202611012334";
 const CACHE = "hanrei-lens-" + VERSION;
 const PRECACHE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
